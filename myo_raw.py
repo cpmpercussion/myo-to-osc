@@ -1,3 +1,15 @@
+'''
+	Original by dzhu
+		https://github.com/dzhu/myo-raw
+
+	Edited by Fernando Cosentino
+		http://www.fernandocosentino.net/pyoconnect
+
+    Edited by Alvaro Villoslada (Alvipe)
+        https://github.com/Alvipe/myo-raw
+'''
+
+
 from __future__ import print_function
 
 import enum
@@ -43,7 +55,6 @@ class Pose(enum.Enum):
     THUMB_TO_PINKY = 5
     UNKNOWN = 255
 
-
 class Packet(object):
     def __init__(self, ords):
         self.typ = ords[0]
@@ -55,7 +66,6 @@ class Packet(object):
         return 'Packet(%02X, %02X, %02X, [%s])' % \
             (self.typ, self.cls, self.cmd,
              ' '.join('%02X' % b for b in multiord(self.payload)))
-
 
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
@@ -165,7 +175,6 @@ class BT(object):
 
             ## not a response: must be an event
             self.handle_event(p)
-
 
 class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
@@ -288,7 +297,7 @@ class MyoRaw(object):
                 gyro = vals[7:10]
                 self.on_imu(quat, acc, gyro)
             elif attr == 0x23:
-                typ, val, xdir = unpack('3B', pay)
+                typ, val, xdir, _,_,_ = unpack('6B', pay)
 
                 if typ == 1: # on arm
                     self.on_arm(Arm(val), XDirection(xdir))
@@ -315,13 +324,16 @@ class MyoRaw(object):
         if self.conn is not None:
             self.bt.disconnect(self.conn)
 
+    def power_off(self):
+        self.write_attr(0x19, b'\x04\x00')
+
     def start_raw(self):
         '''Sending this sequence for v1.0 firmware seems to enable both raw data and
         pose notifications.
         '''
 
         self.write_attr(0x28, b'\x01\x00')
-        self.write_attr(0x19, b'\x01\x03\x01\x01\x00')
+        #self.write_attr(0x19, b'\x01\x03\x01\x01\x00')
         self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
 
     def mc_start_collection(self):
@@ -367,7 +379,6 @@ class MyoRaw(object):
             ## first byte tells it to vibrate; purpose of second byte is unknown
             self.write_attr(0x19, pack('3B', 3, 1, length))
 
-
     def add_emg_handler(self, h):
         self.emg_handlers.append(h)
 
@@ -379,7 +390,6 @@ class MyoRaw(object):
 
     def add_arm_handler(self, h):
         self.arm_handlers.append(h)
-
 
     def on_emg(self, emg, moving):
         for h in self.emg_handlers:
@@ -397,7 +407,6 @@ class MyoRaw(object):
         for h in self.arm_handlers:
             h(arm, xdir)
 
-
 if __name__ == '__main__':
     try:
         import pygame
@@ -407,7 +416,7 @@ if __name__ == '__main__':
         HAVE_PYGAME = False
 
     if HAVE_PYGAME:
-        w, h = 1200, 400
+        w, h = 800, 600
         scr = pygame.display.set_mode((w, h))
 
     last_vals = None
@@ -475,5 +484,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        m.disconnect()
-        print()
+        m.power_off()
+        print("Power off")
+        # m.disconnect()
+        # print("Disconnected")

@@ -1,3 +1,9 @@
+#
+# Original work Copyright (c) 2014 Danny Zhu
+# 
+# Licensed under the MIT license. See the LICENSE file for details.
+#
+
 import struct
 
 def pack(fmt, *args):

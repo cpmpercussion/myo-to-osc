@@ -1,14 +1,9 @@
-'''
-    Original by dzhu
-        https://github.com/dzhu/myo-raw
-
-    Edited by Fernando Cosentino
-        http://www.fernandocosentino.net/pyoconnect
-
-    Edited by Alvaro Villoslada (Alvipe)
-        https://github.com/Alvipe/myo-raw
-'''
-
+#
+# Original work Copyright (c) 2014 Danny Zhu
+# Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
+# 
+# Licensed under the MIT license. See the LICENSE file for details.
+#
 
 from __future__ import print_function
 

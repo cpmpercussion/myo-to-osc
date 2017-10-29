@@ -5,12 +5,7 @@ providing the ability to scan for and connect to a nearby Myo, and giving access
 to data from the EMG sensors and the IMU. For Myo firmware v1.0 and up, access
 to the output of Thalmic's own gesture recognition is also available.
 
-The code is primarily developed on Linux and has been tested on Windows and
-MacOS.
-
-Thanks to Jeff Rowberg's example bglib implementations
-(https://github.com/jrowberg/bglib/), which helped me get started with
-understanding the protocol.
+The code is primarily developed on Linux.
 
 
 # Requirements
@@ -23,6 +18,7 @@ For the examples:
 - pygame, for the example visualization and classifier program
 - numpy, for the classifier program
 - sklearn, for a more efficient classifier (and easy access to smarter classifiers)
+
 
 # Dongle device name
 
@@ -43,54 +39,66 @@ automatically, but if that doesn't work, here's how to find it out manually:
 - Mac: Same as Linux, replacing `ttyACM` with `tty.usb`.
 
 
-# Included files
+# Library files
 
 ## myo_raw.py (access to EMG/IMU data)
 
 myo_raw.py contains the MyoRaw class, which implements the communication
 protocol with a Myo.
-You may run the example with `python -m examples.emg` for a graphical
+
+To process the data yourself, you can call **MyoRaw.add_emg_handler** or
+**MyoRaw.add_imu_handler**; see `examples/emg.py` for example reference.
+
+If your Myo has firmware v1.0 and up, it also performs Thalmic's gesture
+classification onboard, and returns that information. Use
+**MyoRaw.add_arm_handler** and **MyoRaw.add_pose_handler**. Note that you
+will need to perform the sync gesture after starting the program (the Myo will
+vibrate as normal when it is synced).
+
+### Perform the sync gesture as described by [Myo Support](https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture):
+
+> Make sure you're wearing Myo with the USB port facing your wrist. Gently flex
+> your wrist away from your body. Myo will begin to vibrate when it recognizes
+> this gesture. Hold this gesture for a few seconds until Myo stops vibrating.
+
+> You will know you performed the sync gesture successfully when the Thalmic
+> Labs logo LED on the armband stops pulsing. If it needs to warm up, you will
+> see it blink along with an notification next to the gesture indicator window
+> in Myo Connect. Once Myo is fully warmed up and synced, you will feel three
+> distinct vibrations.
+
+
+# Examples
+
+## emg.py (try out communication and display EMG readings)
+
+Run the example with `python -m examples.emg` for a graphical
 display of EMG readings as they come in. A command-line argument is interpreted
 as the device name for the dongle; no argument means to auto-detect. You can
 also press 1, 2, or 3 on the keyboard to make the Myo perform a short, medium,
 or long vibration.
 
-To process the data yourself, you can call MyoRaw.add_emg_handler or
-MyoRaw.add_imu_handler; see the code for examples.
+## classification.py (example pose classification, training program and pose event handlers)
 
-If your Myo has firmware v1.0 and up, it also performs Thalmic's gesture
-classification onboard, and returns that information. Use MyoRaw.add_arm_handler
-and MyoRaw.add_pose_handler. Note that you will need to perform the sync gesture
-after starting the program (the Myo will vibrate as normal when it is synced).
-
-## classify_myo.py (example pose classification and training program)
-
-classify_myo.py contains a very basic pose classifier that uses the EMG
-readings. You have to train it yourself; make up your own poses and assign
-numbers (0-9) to them. As long as a number key is held down, the current EMG
+This example contains a very basic pose classifier that uses the EMG
+readings. You have to train it yourself: Make up your own poses and assign
+numbers (0-9) to them. As long as a number key is pressed, the current EMG
 readings will be recorded as belonging to the pose of that number. Any time a
 new reading comes in, the program compares it against the stored values to
-determine which pose it looks most like. The screen displays the number of
+determine which pose it resembles the most. The screen displays the number of
 samples currently labeled as belonging to each pose, and a histogram displaying
 the classifications of the last 25 inputs. The most common classification among
 the last 25 is shown in green and should be taken as the program's best estimate
 of the current pose.
 
-This method works fine as long as the Myo isn't moved, but, in my experience, it
-takes quite a large amount of training data to handle different positions
-well. Of course, the classifier could be made much, much smarter, but I haven't
-had the chance to tinker with it yet.
-
-## myo.py (Myo library with built-in classifier and pose event handlers)
-
-After you've done training with classify_myo.py, the Myo class in this file can
+After you have done some training the Myo class in this file can
 be used to notify a program each time a pose starts. If run as a standalone
 script, it will simply print out the pose number each time a new pose is
-detected. Use Myo.add_raw_pose_handler (rather than add_pose_handler) to be
+detected. Use **Myo.add_raw_pose_handler** (rather than add_pose_handler) to be
 notified of poses from this class's classifier, rather than Thalmic's onboard
 processing.
 
-Tips for classification:
+### Tips for classification:
 
 - make sure to only press the number keys while the pose is being held, not
   while your hand is moving to or from the pose
@@ -98,8 +106,12 @@ Tips for classification:
   the program a more flexible idea of what the pose is
 - the rest pose needs to be trained as a pose in itself
 
+This method works fine as long as the Myo is not moved, but it may
+take quite a large amount of training data to handle different positions well
+enough.
 
-# Caveats/issues
+
+# Issues
 
 - on Windows, the readings become more and more delayed as time goes on
 - doesn't have access to Thalmic's pose recognition (for firmware < v1.0)
@@ -107,3 +119,15 @@ Tips for classification:
   Myo Connect
 - classify_myo.py segfaults on exit under certain circumstances (probably
   related to Pygame version)
+
+
+# Acknowledgements
+
+Thanks to Jeff Rowberg's example bglib implementations
+(https://github.com/jrowberg/bglib/), which helped to get started with
+understanding the protocol.
+
+
+# License
+
+This project is licensed under the MIT License.

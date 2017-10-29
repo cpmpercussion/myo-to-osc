@@ -195,7 +195,7 @@ class MyoRaw(object):
     def run(self, timeout=None):
         self.bt.recv_packet(timeout)
 
-    def connect(self):
+    def connect(self, filtered=False):
         # stop everything from before
         self.bt.end_scan()
         self.bt.disconnect(0)
@@ -265,7 +265,7 @@ class MyoRaw(object):
             # enable on/off arm notifications
             self.write_attr(0x24, b'\x02\x00')
             # enable EMG notifications
-            self.start_raw()
+            self.start_raw(filtered)
             # enable battery notifications
             self.write_attr(0x12, b'\x01\x10')
 
@@ -342,15 +342,16 @@ class MyoRaw(object):
     def power_off(self):
         self.write_attr(0x19, b'\x04\x00')
 
-    def start_raw(self):
+    def start_raw(self, filtered):
 
         ''' To get raw EMG signals, we subscribe to the four EMG notification
         characteristics by writing a 0x0100 command to the corresponding handles.
         '''
-        self.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
-        self.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
-        self.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
-        self.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
+        if not filtered:
+            self.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
+            self.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
+            self.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
+            self.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
 
         '''Bytes sent to handle 0x19 (command characteristic) have the following
         format: [command, payload_size, EMG mode, IMU mode, classifier mode]
@@ -361,7 +362,8 @@ class MyoRaw(object):
             0x01 -> send IMU data streams
             0x01 -> send classifier events
         '''
-        self.write_attr(0x19, b'\x01\x03\x02\x01\x01')
+        if not filtered:
+            self.write_attr(0x19, b'\x01\x03\x02\x01\x01')
 
         '''Sending this sequence for v1.0 firmware seems to enable both raw data and
         pose notifications.
@@ -381,9 +383,9 @@ class MyoRaw(object):
         signals, a measure of the amplitude of the EMG (which is useful to have
         a measure of muscle strength, but are not as useful as a truly raw signal).
         '''
-
-        # self.write_attr(0x28, b'\x01\x00')  # Not needed for raw signals
-        # self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
+        if filtered:
+            self.write_attr(0x28, b'\x01\x00')  # Not needed for raw signals
+            self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
 
     def mc_start_collection(self):
         '''Myo Connect sends this sequence (or a reordering) when starting data

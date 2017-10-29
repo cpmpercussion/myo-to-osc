@@ -48,7 +48,7 @@ if __name__ == '__main__':
     m = myo.Myo(myo.NNClassifier(), sys.argv[1] if len(sys.argv) >= 2 else None)
     hnd = EMGHandler(m)
     m.add_emg_handler(hnd)
-    m.connect()
+    m.connect(filtered=True)
 
     try:
         while True:

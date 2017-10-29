@@ -24,7 +24,6 @@ try:
 except ImportError:
     HAVE_PYGAME = False
 
-from common import *
 import myo
 
 class EMGHandler(object):
@@ -93,7 +92,10 @@ if __name__ == '__main__':
                     dists, inds = m.cls.nn.kneighbors(hnd.emg)
                     for i, (d, ind) in enumerate(zip(dists[0], inds[0])):
                         y = m.cls.Y[myo.SUBSAMPLE*ind]
-                        text(scr, font, '%d %6d' % (y, d), (650, 20 * i))
+                        pos = (650, 20 * i)
+                        txt = '%d %6d' % (y, d)
+                        clr = (255, 255, 255)
+                        scr.blit(font.render(txt, True, clr), pos)
 
                 pygame.display.flip()
             else:

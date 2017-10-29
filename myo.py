@@ -7,7 +7,7 @@
 from collections import Counter, deque
 import sys
 import time
-
+import struct
 import numpy as np
 
 try:
@@ -16,7 +16,6 @@ try:
 except ImportError:
     HAVE_SK = False
 
-from common import *
 from myo_raw import MyoRaw
 
 SUBSAMPLE = 3
@@ -33,7 +32,7 @@ class NNClassifier(object):
 
     def store_data(self, cls, vals):
         with open('vals%d.dat' % cls, 'ab') as f:
-            f.write(pack('8H', *vals))
+            f.write(struct.pack('<8H', *vals))
 
         self.train(np.vstack([self.X, vals]), np.hstack([self.Y, [cls]]))
 

@@ -15,8 +15,6 @@ import time
 import serial
 from serial.tools.list_ports import comports
 
-from common import *
-
 class Arm(enum.Enum):
     UNKNOWN = 0
     RIGHT = 1
@@ -132,7 +130,7 @@ class BT(object):
 
     # specific BLE commands
     def connect(self, addr):
-        return self.send_command(6, 3, pack('6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
+        return self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
 
     def get_connections(self):
         return self.send_command(0, 6)
@@ -144,18 +142,18 @@ class BT(object):
         return self.send_command(6, 4)
 
     def disconnect(self, h):
-        return self.send_command(3, 0, pack('B', h))
+        return self.send_command(3, 0, struct.pack('<B', h))
 
     def read_attr(self, con, attr):
-        self.send_command(4, 4, pack('BH', con, attr))
+        self.send_command(4, 4, struct.pack('<BH', con, attr))
         return self.wait_event(4, 5)
 
     def write_attr(self, con, attr, val):
-        self.send_command(4, 5, pack('BHB', con, attr, len(val)) + val)
+        self.send_command(4, 5, struct.pack('<BHB', con, attr, len(val)) + val)
         return self.wait_event(4, 1)
 
     def send_command(self, cls, cmd, payload=b'', wait_resp=True):
-        s = pack('4B', 0, len(payload), cls, cmd) + payload
+        s = struct.pack('<4B', 0, len(payload), cls, cmd) + payload
         self.ser.write(s)
 
         while True:
@@ -221,7 +219,7 @@ class MyoRaw(object):
 
         # get firmware version
         fw = self.read_attr(0x17)
-        _, _, _, _, v0, v1, v2, v3 = unpack('BHBBHHHH', fw.payload)
+        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
         print('firmware version: %d.%d.%d.%d' % (v0, v1, v2, v3))
 
         self.old = (v0 == 0)
@@ -254,7 +252,7 @@ class MyoRaw(object):
             imu_hz = 50
 
             # send sensor parameters, or we don't get any data
-            self.write_attr(0x19, pack('BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
+            self.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         else:
             name = self.read_attr(0x03)
@@ -274,12 +272,12 @@ class MyoRaw(object):
             if (p.cls, p.cmd) != (4, 5):
                 return
 
-            c, attr, typ = unpack('BHB', p.payload[:4])
+            c, attr, typ = struct.unpack('<BHB', p.payload[:4])
             pay = p.payload[5:]
 
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
-                vals = unpack('8HB', pay)
+                vals = struct.unpack('<8HB', pay)
                 # not entirely sure what the last byte is, but it's a bitmask that
                 # seems to indicate which sensors think they're being moved around or
                 # something
@@ -299,14 +297,14 @@ class MyoRaw(object):
                 self.on_emg(emg2, 0)
             # Read IMU characteristic handle
             elif attr == 0x1c:
-                vals = unpack('10h', pay)
+                vals = struct.unpack('<10h', pay)
                 quat = vals[:4]
                 acc = vals[4:7]
                 gyro = vals[7:10]
                 self.on_imu(quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
-                typ, val, xdir, _, _, _ = unpack('6B', pay)
+                typ, val, xdir, _, _, _ = struct.unpack('<6B', pay)
 
                 if typ == 1:  # on arm
                     self.on_arm(Arm(val), XDirection(xdir))
@@ -337,7 +335,7 @@ class MyoRaw(object):
             self.bt.disconnect(self.conn)
 
     def sleep_mode(self, mode):
-        self.write_attr(0x19, pack('3B', 9, 1, mode))
+        self.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
 
     def power_off(self):
         self.write_attr(0x19, b'\x04\x00')
@@ -428,10 +426,10 @@ class MyoRaw(object):
     def vibrate(self, length):
         if length in range(1, 4):
             # first byte tells it to vibrate; purpose of second byte is unknown (payload size?)
-            self.write_attr(0x19, pack('3B', 3, 1, length))
+            self.write_attr(0x19, struct.pack('<3B', 3, 1, length))
 
     def set_leds(self, logo, line):
-        self.write_attr(0x19, pack('8B', 6, 6, *(logo + line)))
+        self.write_attr(0x19, struct.pack('<8B', 6, 6, *(logo + line)))
 
     # def get_battery_level(self):
     #     battery_level = self.read_attr(0x11)

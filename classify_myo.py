@@ -4,8 +4,6 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
-from __future__ import print_function
-
 from collections import Counter
 import struct
 import sys

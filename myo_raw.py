@@ -5,8 +5,6 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
-from __future__ import print_function
-
 import enum
 import re
 import struct
@@ -18,21 +16,6 @@ import serial
 from serial.tools.list_ports import comports
 
 from common import *
-
-
-def multichr(ords):
-    if sys.version_info[0] >= 3:
-        return bytes(ords)
-    else:
-        return ''.join(map(chr, ords))
-
-
-def multiord(b):
-    if sys.version_info[0] >= 3:
-        return list(b)
-    else:
-        return map(ord, b)
-
 
 class Arm(enum.Enum):
     UNKNOWN = 0
@@ -61,12 +44,12 @@ class Packet(object):
         self.typ = ords[0]
         self.cls = ords[2]
         self.cmd = ords[3]
-        self.payload = multichr(ords[4:])
+        self.payload = bytes(ords[4:])
 
     def __repr__(self):
         return 'Packet(%02X, %02X, %02X, [%s])' % \
             (self.typ, self.cls, self.cmd,
-             ' '.join('%02X' % b for b in multiord(self.payload)))
+             ' '.join('%02X' % b for b in list(self.payload)))
 
 
 class BT(object):
@@ -149,7 +132,7 @@ class BT(object):
 
     # specific BLE commands
     def connect(self, addr):
-        return self.send_command(6, 3, pack('6sBHHHH', multichr(addr), 0, 6, 6, 64, 0))
+        return self.send_command(6, 3, pack('6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
 
     def get_connections(self):
         return self.send_command(0, 6)
@@ -227,13 +210,13 @@ class MyoRaw(object):
             print('scan response:', p)
 
             if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):
-                addr = list(multiord(p.payload[2:8]))
+                addr = list(list(p.payload[2:8]))
                 break
         self.bt.end_scan()
 
         # connect and wait for status event
         conn_pkt = self.bt.connect(addr)
-        self.conn = multiord(conn_pkt.payload)[-1]
+        self.conn = list(conn_pkt.payload)[-1]
         self.bt.wait_event(3, 0)
 
         # get firmware version
@@ -441,7 +424,7 @@ class MyoRaw(object):
         self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
 
     def vibrate(self, length):
-        if length in xrange(1, 4):
+        if length in range(1, 4):
             # first byte tells it to vibrate; purpose of second byte is unknown (payload size?)
             self.write_attr(0x19, pack('3B', 3, 1, length))
 

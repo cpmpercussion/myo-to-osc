@@ -15,13 +15,14 @@ understanding the protocol.
 
 # Requirements
 
-- python >=2.6
+For the library:
+- python >= 3.6
 - pySerial
-- enum34 (for Python <3.4)
+
+For the examples:
 - pygame, for the example visualization and classifier program
 - numpy, for the classifier program
 - sklearn, for a more efficient classifier (and easy access to smarter classifiers)
-
 
 # Dongle device name
 

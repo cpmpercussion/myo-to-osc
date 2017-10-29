@@ -48,7 +48,8 @@ automatically, but if that doesn't work, here's how to find it out manually:
 ## myo_raw.py (access to EMG/IMU data)
 
 myo_raw.py contains the MyoRaw class, which implements the communication
-protocol with a Myo. If run as a standalone script, it provides a graphical
+protocol with a Myo.
+You may run the example with `python -m examples.emg` for a graphical
 display of EMG readings as they come in. A command-line argument is interpreted
 as the device name for the dongle; no argument means to auto-detect. You can
 also press 1, 2, or 3 on the keyboard to make the Myo perform a short, medium,

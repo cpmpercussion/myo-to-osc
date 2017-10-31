@@ -1,28 +1,34 @@
 # Overview
 
-This project provides an interface to communicate with the Thalmic Myo,
+This library provides an interface to communicate with the Thalmic Myo,
 providing the ability to scan for and connect to a nearby Myo, and giving access
-to data from the EMG sensors and the IMU. For Myo firmware v1.0 and up, access
-to the output of Thalmic's own gesture recognition is also available.
+to data from the EMG sensors and the IMU. For Myo firmware v1.0 or higher,
+access to the output of Thalmic's own gesture recognition is also available.
 
 The code is primarily developed on Linux.
 
 
-# Requirements
+# Installation
 
-For the library:
-- python >= 3.6
-- pySerial
+To install the library simply clone the repository and pip install it:
 
-For the examples:
-- pygame, for the example visualization and classifier program
-- numpy, for the classifier program
-- sklearn, for a more efficient classifier (and easy access to smarter classifiers)
+	git clone https://github.com/qtux/myo-raw.git
+	cd myo-raw
+	pip install .
+
+To run the examples you will also need to install
+
+	pip install ".[emg, classification]"
 
 
-# Dongle device name
+# Usage
 
-To use these programs, you might need to know the name of the device
+The `myo_raw` folder contains the library files to access EMG/IMU data. The
+Myo communication protocol is implemented in the MyoRaw class.
+
+## Dongle device name
+
+To use the library, you might need to know the name of the device
 corresponding to the Myo dongle. The programs will attempt to detect it
 automatically, but if that doesn't work, here's how to find it out manually:
 
@@ -38,18 +44,12 @@ automatically, but if that doesn't work, here's how to find it out manually:
 
 - Mac: Same as Linux, replacing `ttyACM` with `tty.usb`.
 
+## Process data using handlers
 
-# Library files
-
-## myo_raw.py (access to EMG/IMU data)
-
-myo_raw.py contains the MyoRaw class, which implements the communication
-protocol with a Myo.
-
-To process the data yourself, you can call **MyoRaw.add_emg_handler** or
+To process the data, you can call **MyoRaw.add_emg_handler** or
 **MyoRaw.add_imu_handler**; see `examples/emg.py` for example reference.
 
-If your Myo has firmware v1.0 and up, it also performs Thalmic's gesture
+If your Myo has firmware v1.0 or higher, it also performs Thalmic's gesture
 classification onboard, and returns that information. Use
 **MyoRaw.add_arm_handler** and **MyoRaw.add_pose_handler**. Note that you
 will need to perform the sync gesture after starting the program (the Myo will
@@ -70,9 +70,15 @@ vibrate as normal when it is synced).
 
 # Examples
 
+Before running the examples make sure you have the `extras` requirements
+installed as described above.
+
+To run an example change directory to the `examples` folder and execute
+it with python, e.g. `python emg.py`.
+
 ## emg.py (try out communication and display EMG readings)
 
-Run the example with `python -m examples.emg` for a graphical
+This example provides a graphical
 display of EMG readings as they come in. A command-line argument is interpreted
 as the device name for the dongle; no argument means to auto-detect. You can
 also press 1, 2, or 3 on the keyboard to make the Myo perform a short, medium,

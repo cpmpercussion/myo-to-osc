@@ -76,9 +76,9 @@ class Pose:
     myohw_pose_unknown        = 0xffff
 
 
-# /// Various parameters that may affect the behaviour of this Myo armband.
-# /// The Myo library reads this attribute when a connection is established.
-# /// Value layout for the myohw_att_handle_fw_info attribute.
+# Various parameters that may affect the behaviour of this Myo armband.
+# The Myo library reads this attribute when a connection is established.
+# Value layout for the myohw_att_handle_fw_info attribute.
 # typedef struct MYOHW_PACKED
 # {
 #     uint8_t serial_number[6];        ///< Unique serial number of this Myo.
@@ -93,25 +93,26 @@ class Pose:
 # } myohw_fw_info_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_fw_info_t, 20);
 
-# // Known Myo SKUs
-# typedef enum {
-#     myohw_sku_unknown   = 0, ///< Unknown SKU (default value for old firmwares)
-#     myohw_sku_black_myo = 1, ///< Black Myo
-#     myohw_sku_white_myo = 2  ///< White Myo
-# } myohw_sku_t;
 
-# /// Known Myo hardware revisions.
-# typedef enum {
-#     myohw_hardware_rev_unknown = 0, ///< Unknown hardware revision.
-#     myohw_hardware_rev_revc    = 1, ///< Myo Alpha (REV-C) hardware.
-#     myohw_hardware_rev_revd    = 2, ///< Myo (REV-D) hardware.
-#     myohw_num_hardware_revs         ///< Number of hardware revisions known; not a valid hardware revision.
-# } myohw_hardware_rev_t;
+class Sku(Enum):
+    """ Known Myo SKUs. """
+    myohw_sku_unknown   = 0  # Unknown SKU (default value for old firmwares)
+    myohw_sku_black_myo = 1  # Black Myo
+    myohw_sku_white_myo = 2  # White Myo
 
-# /// Version information for the Myo firmware.
-# /// Value layout for the myohw_att_handle_fw_version attribute.
-# /// Minor version is incremented for changes in this interface.
-# /// Patch version is incremented for firmware changes that do not introduce changes in this interface.
+
+class Hardware_Rev(Enum):
+    """ Known Myo hardware revisions. """
+    myohw_hardware_rev_unknown = 0  # Unknown hardware revision.
+    myohw_hardware_rev_revc    = 1  # Myo Alpha (REV-C) hardware.
+    myohw_hardware_rev_revd    = 2  # Myo (REV-D) hardware.
+    # myohw_num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
+
+
+# Version information for the Myo firmware.
+# Value layout for the myohw_att_handle_fw_version attribute.
+# Minor version is incremented for changes in this interface.
+# Patch version is incremented for firmware changes that do not introduce changes in this interface.
 # typedef struct MYOHW_PACKED
 # {
 #     uint16_t major;
@@ -126,10 +127,11 @@ class Pose:
 # static const uint16_t myohw_firmware_version_major = MYOHW_FIRMWARE_VERSION_MAJOR;
 # static const uint16_t myohw_firmware_version_minor = MYOHW_FIRMWARE_VERSION_MINOR;
 
+
 # myohw_control_commands Control Commands
 
 
-class Command:
+class Command(Enum):
     """ Kinds of Myo Commands """
     myohw_command_set_mode               = 0x01  # Set EMG and IMU modes. See myohw_command_set_mode_t.
     myohw_command_vibrate                = 0x03  # Vibrate. See myohw_command_vibrate_t.
@@ -140,36 +142,36 @@ class Command:
     myohw_command_user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
                                                  # See myohw_command_user_action_t.
 
-# /// Header that every command begins with.
+# Header that every command begins with.
 # typedef struct MYOHW_PACKED {
 #     uint8_t command;        ///< Command to send. See myohw_command_t.
 #     uint8_t payload_size;   ///< Number of bytes in payload.
 # } myohw_command_header_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_header_t, 2);
 
-# /// EMG modes.
-# typedef enum {
-#     myohw_emg_mode_none         = 0x00, ///< Do not send EMG data.
-#     myohw_emg_mode_send_emg     = 0x02, ///< Send filtered EMG data.
-#     myohw_emg_mode_send_emg_raw = 0x03, ///< Send raw (unfiltered) EMG data.
-# } myohw_emg_mode_t;
 
-# /// IMU modes.
-# typedef enum {
-#     myohw_imu_mode_none        = 0x00, ///< Do not send IMU data or events.
-#     myohw_imu_mode_send_data   = 0x01, ///< Send IMU data streams (accelerometer, gyroscope, and orientation).
-#     myohw_imu_mode_send_events = 0x02, ///< Send motion events detected by the IMU (e.g. taps).
-#     myohw_imu_mode_send_all    = 0x03, ///< Send both IMU data streams and motion events.
-#     myohw_imu_mode_send_raw    = 0x04, ///< Send raw IMU data streams.
-# } myohw_imu_mode_t;
+class EMG_Mode(Enum):
+    """ EMG Modes. """
+    myohw_emg_mode_none         = 0x00  # Do not send EMG data.
+    myohw_emg_mode_send_emg     = 0x02  # Send filtered EMG data.
+    myohw_emg_mode_send_emg_raw = 0x03  # Send raw (unfiltered) EMG data.
 
-# /// Classifier modes.
-# typedef enum {
-#     myohw_classifier_mode_disabled = 0x00, ///< Disable and reset the internal state of the onboard classifier.
-#     myohw_classifier_mode_enabled  = 0x01, ///< Send classifier events (poses and arm events).
-# } myohw_classifier_mode_t;
 
-# /// Command to set EMG and IMU modes.
+class IMU_Mode(Enum):
+    """ IMU modes. """
+    myohw_imu_mode_none        = 0x00  # Do not send IMU data or events.
+    myohw_imu_mode_send_data   = 0x01  # Send IMU data streams (accelerometer, gyroscope, and orientation).
+    myohw_imu_mode_send_events = 0x02  # Send motion events detected by the IMU (e.g. taps).
+    myohw_imu_mode_send_all    = 0x03  # Send both IMU data streams and motion events.
+    myohw_imu_mode_send_raw    = 0x04  # Send raw IMU data streams.
+
+
+class Classifier_Mode(Enum):
+    """Classifier Modes. """
+    myohw_classifier_mode_disabled = 0x00  # Disable and reset the internal state of the onboard classifier.
+    myohw_classifier_mode_enabled  = 0x01  # Send classifier events (poses and arm events).
+
+# Command to set EMG and IMU modes.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_set_mode. payload_size = 3.
 #     uint8_t emg_mode;              ///< EMG sensor mode. See myohw_emg_mode_t.
@@ -178,28 +180,28 @@ class Command:
 # } myohw_command_set_mode_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_set_mode_t, 5);
 
-# /// Kinds of vibrations.
-# typedef enum {
-#     myohw_vibration_none   = 0x00, ///< Do not vibrate.
-#     myohw_vibration_short  = 0x01, ///< Vibrate for a short amount of time.
-#     myohw_vibration_medium = 0x02, ///< Vibrate for a medium amount of time.
-#     myohw_vibration_long   = 0x03, ///< Vibrate for a long amount of time.
-# } myohw_vibration_type_t;
 
-# /// Vibration command.
+class Vibration_Type(Enum):
+    """ Kinds of vibrations. """
+    myohw_vibration_none   = 0x00  # Do not vibrate.
+    myohw_vibration_short  = 0x01  # Vibrate for a short amount of time.
+    myohw_vibration_medium = 0x02  # Vibrate for a medium amount of time.
+    myohw_vibration_long   = 0x03  # Vibrate for a long amount of time.
+
+# Vibration command.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_vibrate. payload_size == 1.
 #     uint8_t type;                  ///< See myohw_vibration_type_t.
 # } myohw_command_vibrate_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_vibrate_t, 3);
 
-# /// Deep sleep command.
+# Deep sleep command.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_deep_sleep. payload_size == 0.
 # } myohw_command_deep_sleep_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_deep_sleep_t, 2);
 
-# /// Extended vibration command.
+# Extended vibration command.
 # #define MYOHW_COMMAND_VIBRATE2_STEPS 6
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_vibrate2. payload_size == 18.
@@ -210,55 +212,55 @@ class Command:
 # } myohw_command_vibrate2_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_vibrate2_t, 20);
 
-# /// Sleep modes.
-# typedef enum {
-#     myohw_sleep_mode_normal      = 0, ///< Normal sleep mode; Myo will sleep after a period of inactivity.
-#     myohw_sleep_mode_never_sleep = 1, ///< Never go to sleep.
-# } myohw_sleep_mode_t;
 
-# /// Set sleep mode command.
+class Sleep_Mode(Enum):
+    """ Sleep modes. """
+    myohw_sleep_mode_normal      = 0  # Normal sleep mode; Myo will sleep after a period of inactivity.
+    myohw_sleep_mode_never_sleep = 1  # Never go to sleep.
+
+# Set sleep mode command.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_set_sleep_mode. payload_size == 1.
 #     uint8_t sleep_mode;            ///< Sleep mode. See myohw_sleep_mode_t.
 # } myohw_command_set_sleep_mode_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_set_sleep_mode_t, 3);
 
-# /// Unlock types.
-# typedef enum {
-#     myohw_unlock_lock  = 0x00, ///< Re-lock immediately.
-#     myohw_unlock_timed = 0x01, ///< Unlock now and re-lock after a fixed timeout.
-#     myohw_unlock_hold  = 0x02, ///< Unlock now and remain unlocked until a lock command is received.
-# } myohw_unlock_type_t;
 
-# /// Unlock Myo command.
-# /// Can also be used to force Myo to re-lock.
+class Unlock_Type(Enum):
+    """ Unlock types. """
+    myohw_unlock_lock  = 0x00  # Re-lock immediately.
+    myohw_unlock_timed = 0x01  # Unlock now and re-lock after a fixed timeout.
+    myohw_unlock_hold  = 0x02  # Unlock now and remain unlocked until a lock command is received.
+
+# Unlock Myo command.
+# Can also be used to force Myo to re-lock.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_unlock. payload_size == 1.
 #     uint8_t type;                  ///< Unlock type. See myohw_unlock_type_t.
 # } myohw_command_unlock_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_unlock_t, 3);
 
-# /// User action types.
-# typedef enum {
-#     myohw_user_action_single = 0, ///< User did a single, discrete action, such as pausing a video.
-# } myohw_user_action_type_t;
 
-# /// User action command.
+class User_Action_Type(Enum):
+    """ User action types. """
+    myohw_user_action_single = 0  # User did a single, discrete action, such as pausing a video.
+
+
+# User action command.
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_user_action. payload_size == 1.
 #     uint8_t type;                  ///< Type of user action that occurred. See myohw_user_action_type_t.
 # } myohw_command_user_action_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_user_action_t, 3);
 
-# /// Classifier model types
-# typedef enum {
-#     myohw_classifier_model_builtin = 0, ///< Model built into the classifier package.
-#     myohw_classifier_model_custom  = 1  ///< Model based on personalized user data.
-# } myohw_classifier_model_type_t;
 
-# /// @}
+class Classifier_Model_Type(Enum):
+    """ Classifier model types. """
+    myohw_classifier_model_builtin = 0  # Model built into the classifier package.
+    myohw_classifier_model_custom  = 1  # Model based on personalized user data.
 
-# /// Integrated motion data.
+
+# Integrated motion data.
 # typedef struct MYOHW_PACKED {
 #     /// Orientation data, represented as a unit quaternion. Values are multiplied by MYOHW_ORIENTATION_SCALE.
 #     struct MYOHW_PACKED {
@@ -272,20 +274,21 @@ class Command:
 # } myohw_imu_data_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_imu_data_t, 20);
 
-# /// Default IMU sample rate in Hz.
+# Default IMU sample rate in Hz.
 # #define MYOHW_DEFAULT_IMU_SAMPLE_RATE 50
 
-# /// Scale values for unpacking IMU data
+# Scale values for unpacking IMU data
 # #define MYOHW_ORIENTATION_SCALE   16384.0f ///< See myohw_imu_data_t::orientation
 # #define MYOHW_ACCELEROMETER_SCALE 2048.0f  ///< See myohw_imu_data_t::accelerometer
 # #define MYOHW_GYROSCOPE_SCALE     16.0f    ///< See myohw_imu_data_t::gyroscope
 
-# /// Types of motion events.
-# typedef enum {
-#     myohw_motion_event_tap = 0x00,
-# } myohw_motion_event_type_t;
 
-# /// Motion event data received in a myohw_att_handle_motion_event attribute.
+class Motion_Event_Type(Enum):
+    """ Types of motion events. """
+    myohw_motion_event_tap = 0x00,
+
+
+# Motion event data received in a myohw_att_handle_motion_event attribute.
 # typedef struct MYOHW_PACKED {
 #     uint8_t type; /// Type type of motion event that occurred. See myohw_motion_event_type_t.
 
@@ -300,36 +303,37 @@ class Command:
 # } myohw_motion_event_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_motion_event_t, 3);
 
-# /// Types of classifier events.
-# typedef enum {
-#     myohw_classifier_event_arm_synced   = 0x01,
-#     myohw_classifier_event_arm_unsynced = 0x02,
-#     myohw_classifier_event_pose         = 0x03,
-#     myohw_classifier_event_unlocked     = 0x04,
-#     myohw_classifier_event_locked       = 0x05,
-#     myohw_classifier_event_sync_failed  = 0x06,
-# } myohw_classifier_event_type_t;
 
-# /// Enumeration identifying a right arm or left arm.
-# typedef enum {
-#     myohw_arm_right   = 0x01,
-#     myohw_arm_left    = 0x02,
-#     myohw_arm_unknown = 0xff
-# } myohw_arm_t;
+class Classifier_Event_Type(Enum):
+    """ Types of classifier events. """
+    myohw_classifier_event_arm_synced   = 0x01
+    myohw_classifier_event_arm_unsynced = 0x02
+    myohw_classifier_event_pose         = 0x03
+    myohw_classifier_event_unlocked     = 0x04
+    myohw_classifier_event_locked       = 0x05
+    myohw_classifier_event_sync_failed  = 0x06
 
-# /// Possible directions for Myo's +x axis relative to a user's arm.
-# typedef enum {
-#     myohw_x_direction_toward_wrist = 0x01,
-#     myohw_x_direction_toward_elbow = 0x02,
-#     myohw_x_direction_unknown      = 0xff
-# } myohw_x_direction_t;
 
-# /// Possible outcomes when the user attempts a sync gesture.
-# typedef enum {
-#     myohw_sync_failed_too_hard = 0x01, ///< Sync gesture was performed too hard.
-# } myohw_sync_result_t;
+class Arm(Enum):
+    """ Enumeration identifying a right arm or left arm. """
+    myohw_arm_right   = 0x01
+    myohw_arm_left    = 0x02
+    myohw_arm_unknown = 0xff
 
-# /// Classifier event data received in a myohw_att_handle_classifier_event attribute.
+
+class X_Direction(Enum):
+    """ Possible directions for Myo's +x axis relative to a user's arm. """
+    myohw_x_direction_toward_wrist = 0x01
+    myohw_x_direction_toward_elbow = 0x02
+    myohw_x_direction_unknown      = 0xff
+
+
+class Sync_Result(Enum):
+    """ Possible outcomes when the user attempts a sync gesture. """
+    myohw_sync_failed_too_hard = 0x01  # Sync gesture was performed too hard.
+
+
+# Classifier event data received in a myohw_att_handle_classifier_event attribute.
 # typedef struct MYOHW_PACKED {
 #     uint8_t type; ///< See myohw_classifier_event_type_t
 
@@ -350,16 +354,13 @@ class Command:
 # } myohw_classifier_event_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_classifier_event_t, 3);
 
-# /// The rate that EMG events are streamed over Bluetooth.
+# The rate that EMG events are streamed over Bluetooth.
 # #define MYOHW_EMG_DEFAULT_STREAMING_RATE 200
 
-# /// Raw EMG data received in a myohw_att_handle_emg_data_# attribute.
-# /// Value layout for myohw_att_handle_emg_data_#.
+# Raw EMG data received in a myohw_att_handle_emg_data_# attribute.
+# Value layout for myohw_att_handle_emg_data_#.
 # typedef struct MYOHW_PACKED {
 #     int8_t sample1[8];       ///< 1st sample of EMG data.
 #     int8_t sample2[8];       ///< 2nd sample of EMG data.
 # } myohw_emg_data_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_emg_data_t, 16);
-
-# /// @}
-

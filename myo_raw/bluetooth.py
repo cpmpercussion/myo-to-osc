@@ -10,6 +10,7 @@ import threading
 import time
 import serial
 
+
 class Packet(object):
     def __init__(self, ords):
         self.typ = ords[0]

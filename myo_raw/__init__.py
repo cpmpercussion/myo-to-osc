@@ -41,7 +41,7 @@ class MyoRaw(object):
     def run(self, timeout=None):
         self.bt.recv_packet(timeout)
 
-    def connect(self, filtered=False):
+    def connect(self, filtered=False, address=None):
         # stop everything from before
         self.bt.end_scan()
         self.bt.disconnect(0)
@@ -49,16 +49,20 @@ class MyoRaw(object):
         self.bt.disconnect(2)
 
         # start scanning
-        print('scanning...')
-        self.bt.discover()
-        while True:
-            p = self.bt.recv_packet()
-            print('scan response:', p)
+        if address is None:
+            print('scanning...')
+            self.bt.discover()
+            while True:
+                p = self.bt.recv_packet()
+                # print('scan response:', p)
 
-            if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):  # This is MYO_SERVICE_INFO_UUID
-                addr = list(list(p.payload[2:8]))
-                break
-        self.bt.end_scan()
+                if p.payload.endswith(kMyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
+                    addr = list(list(p.payload[2:8]))
+                    print("Found a Myo")
+                    print("%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))) # print the Myo's mac address
+                    break
+            self.bt.end_scan()
+        
 
         # connect and wait for status event
         conn_pkt = self.bt.connect(addr)

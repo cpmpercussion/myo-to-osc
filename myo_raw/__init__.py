@@ -8,9 +8,9 @@
 import enum
 import re
 import struct
-import sys
 from serial.tools.list_ports import comports
 from .bluetooth import BT
+
 
 class Arm(enum.Enum):
     UNKNOWN = 0
@@ -156,7 +156,7 @@ class MyoRaw(object):
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
                 '''According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
-                each characteristic sends two secuential readings in each update,
+                each characteristic sends two sequential readings in each update,
                 so the received payload is split in two samples. According to the
                 Myo BLE specification, the data type of the EMG samples is int8_t.
                 '''

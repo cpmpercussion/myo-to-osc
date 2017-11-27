@@ -6,6 +6,7 @@ Python version 2017.
 """
 
 from enum import Enum
+from struct import pack, unpack
 
 MYO_SERVICE_INFO_UUID = [
     0x42, 0x48, 0x12, 0x4a,
@@ -13,7 +14,7 @@ MYO_SERVICE_INFO_UUID = [
     0xb9, 0xde, 0x04, 0xa9,
     0x01, 0x00, 0x06, 0xd5]
 
-# static const uint8_t kMyoServiceInfoUuid[] = MYO_SERVICE_INFO_UUID;
+kMyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', 0x42, 0x48, 0x12, 0x4a, 0x7f, 0x2c, 0x48, 0x47, 0xb9, 0xde, 0x04, 0xa9, 0x01, 0x00, 0x06, 0xd5)
 
 # The number of EMG sensors that a Myo has.
 myohw_num_emg_sensors = 8
@@ -23,9 +24,9 @@ myohw_num_emg_sensors = 8
 # All values are big-endian.
 
 # The following enum lists the 16bit short UUIDs of Myo services and characteristics. To construct a full 128bit
-# UUID, replace the two 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from myohw_standard_services. 
+# UUID, replace the two 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from myohw_standard_services.
 # The byte sequence of MYO_SERVICE_BASE_UUID is in network order. Keep this in mind when doing the replacement.
-# For example, the full service UUID for GCControlService would be d5060001-a904-deb9-4748-2c7f4a124842. 
+# For example, the full service UUID for Services.ControlService would be d5060001-a904-deb9-4748-2c7f4a124842.
 MYO_SERVICE_BASE_UUID = [
     0x42, 0x48, 0x12, 0x4a,
     0x7f, 0x2c, 0x48, 0x47,
@@ -57,7 +58,7 @@ class Services(Enum):
     EmgData3Characteristic        = 0x0405  # Raw EMG data. Notify-only characteristic.
 
 
-class StandardServices(Enum):
+class Standard_Services(Enum):
     """ Standard Bluetooth device services """
     BatteryService                = 0x180f  # Battery service
     BatteryLevelCharacteristic    = 0x2a19  # Current battery level information. Read/notify characteristic.
@@ -75,9 +76,21 @@ class Pose:
     myohw_pose_unknown        = 0xffff
 
 
-# Various parameters that may affect the behaviour of this Myo armband.
-# The Myo library reads this attribute when a connection is established.
-# Value layout for the myohw_att_handle_fw_info attribute.
+def myohw_fw_info(serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved):
+    """ Various parameters that may affect the behaviour of this Myo armband.
+    The Myo library reads this attribute when a connection is established.
+    Value layout for the myohw_att_handle_fw_info attribute. """
+    return {
+        "serial_number": serial_number,  # Unique serial number of this Myo.
+        "unlock_pose": unlock_pose,  # Pose that should be interpreted as the unlock pose. See myohw_pose_t.
+        "active_classifier_type": active_classifier_type,  # Whether Myo is currently using a built-in or a custom classifier.
+                                                           # See myohw_classifier_model_type_t.
+        "active_classifier_index": active_classifier_index,  # Index of the classifier that is currently active.
+        "has_custom_classifier": has_custom_classifier,  # Whether Myo contains a valid custom classifier. 1 if it does, otherwise 0.
+        "stream_indicating": stream_indicating,  # Set if the Myo uses BLE indicates to stream data, for reliable capture.
+        "sku": sku,  # SKU value of the device. See myohw_sku_t
+        "reserved": reserved  # Reserved for future use; populated with zeros.
+    }
 # typedef struct MYOHW_PACKED
 # {
 #     uint8_t serial_number[6];        ///< Unique serial number of this Myo.
@@ -91,6 +104,8 @@ class Pose:
 #     uint8_t reserved[7];             ///< Reserved for future use; populated with zeros.
 # } myohw_fw_info_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_fw_info_t, 20);
+
+
 
 
 class Sku(Enum):
@@ -108,10 +123,17 @@ class Hardware_Rev(Enum):
     # myohw_num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
 
 
-# Version information for the Myo firmware.
-# Value layout for the myohw_att_handle_fw_version attribute.
-# Minor version is incremented for changes in this interface.
-# Patch version is incremented for firmware changes that do not introduce changes in this interface.
+def myohw_fw_version(major, minor, patch, hardware_rev):
+    """ Version information for the Myo firmware.
+    Value layout for the myohw_att_handle_fw_version attribute.
+    Minor version is incremented for changes in this interface.
+    Patch version is incremented for firmware changes that do not introduce changes in this interface. """
+    return {
+        'major': major,
+        'minor': minor,
+        'patch': patch,
+        'hardware_rev': hardware_rev  # Myo hardware revision. See myohw_hardware_rev.
+    }
 # typedef struct MYOHW_PACKED
 # {
 #     uint16_t major;
@@ -141,6 +163,13 @@ class Command(Enum):
     myohw_command_user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
                                                  # See myohw_command_user_action_t.
 
+
+def myohw_command_header(command, payload_size):
+    """ Header that every command begins with. """
+    return {
+        'command': command,  # Command to send. See myohw_command_t.
+        'payload_size': payload_size  # Number of bytes in payload.
+    }
 # Header that every command begins with.
 # typedef struct MYOHW_PACKED {
 #     uint8_t command;        ///< Command to send. See myohw_command_t.
@@ -170,7 +199,16 @@ class Classifier_Mode(Enum):
     myohw_classifier_mode_disabled = 0x00  # Disable and reset the internal state of the onboard classifier.
     myohw_classifier_mode_enabled  = 0x01  # Send classifier events (poses and arm events).
 
-# Command to set EMG and IMU modes.
+
+def myohw_command_set_mode(emg_mode, imu_mode, classifier_mode):
+    """ Command to set EMG and IMU modes. """
+    return {
+        'header': myohw_command_header(Command.myohw_command_set_mode.value, 3),  # command == myohw_command_set_mode. payload_size = 3.
+        'emg_mode': emg_mode,  # EMG sensor mode. See myohw_emg_mode_t.
+        'imu_mode': imu_mode,  # IMU mode. See myohw_imu_mode_t.
+        'classifier_mode': classifier_mode  # Classifier mode. See myohw_classifier_mode_t.
+    }
+
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_set_mode. payload_size = 3.
 #     uint8_t emg_mode;              ///< EMG sensor mode. See myohw_emg_mode_t.
@@ -217,7 +255,13 @@ class Sleep_Mode(Enum):
     myohw_sleep_mode_normal      = 0  # Normal sleep mode; Myo will sleep after a period of inactivity.
     myohw_sleep_mode_never_sleep = 1  # Never go to sleep.
 
-# Set sleep mode command.
+
+def myo_command_set_sleep_mode(sleep_mode):
+    """ Set sleep mode command. """
+    return {
+        'header': myohw_command_header(myohw_command_t.myohw_command_set_sleep_mode.value, 1),
+        'sleep_mode': Sleep_Mode(sleep_mode)
+    }
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_set_sleep_mode. payload_size == 1.
 #     uint8_t sleep_mode;            ///< Sleep mode. See myohw_sleep_mode_t.

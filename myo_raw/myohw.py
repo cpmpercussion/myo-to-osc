@@ -7,16 +7,16 @@ Python version 2017.
 
 from enum import Enum
 
-# #define MYO_SERVICE_INFO_UUID { \
-#     0x42, 0x48, 0x12, 0x4a,     \
-#     0x7f, 0x2c, 0x48, 0x47,     \
-#     0xb9, 0xde, 0x04, 0xa9,     \
-#     0x01, 0x00, 0x06, 0xd5      \
-# }
+MYO_SERVICE_INFO_UUID = [
+    0x42, 0x48, 0x12, 0x4a,
+    0x7f, 0x2c, 0x48, 0x47,
+    0xb9, 0xde, 0x04, 0xa9,
+    0x01, 0x00, 0x06, 0xd5]
+
 # static const uint8_t kMyoServiceInfoUuid[] = MYO_SERVICE_INFO_UUID;
 
 # The number of EMG sensors that a Myo has.
-# static const int myohw_num_emg_sensors = 8;
+myohw_num_emg_sensors = 8
 
 # myo_hardware Myo Hardware Data Structures
 # These types and enumerations describe the format of data sent to and from a Myo device using Bluetooth Low Energy.
@@ -26,12 +26,11 @@ from enum import Enum
 # UUID, replace the two 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from myohw_standard_services. 
 # The byte sequence of MYO_SERVICE_BASE_UUID is in network order. Keep this in mind when doing the replacement.
 # For example, the full service UUID for GCControlService would be d5060001-a904-deb9-4748-2c7f4a124842. 
-# #define MYO_SERVICE_BASE_UUID { \
-#     0x42, 0x48, 0x12, 0x4a,     \
-#     0x7f, 0x2c, 0x48, 0x47,     \
-#     0xb9, 0xde, 0x04, 0xa9,     \
-#     0x00, 0x00, 0x06, 0xd5      \
-# }
+MYO_SERVICE_BASE_UUID = [
+    0x42, 0x48, 0x12, 0x4a,
+    0x7f, 0x2c, 0x48, 0x47,
+    0xb9, 0xde, 0x04, 0xa9,
+    0x00, 0x00, 0x06, 0xd5]
 
 
 class Services(Enum):
@@ -122,10 +121,10 @@ class Hardware_Rev(Enum):
 # } myohw_fw_version_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_fw_version_t, 8);
 
-# #define MYOHW_FIRMWARE_VERSION_MAJOR 1
-# #define MYOHW_FIRMWARE_VERSION_MINOR 2
-# static const uint16_t myohw_firmware_version_major = MYOHW_FIRMWARE_VERSION_MAJOR;
-# static const uint16_t myohw_firmware_version_minor = MYOHW_FIRMWARE_VERSION_MINOR;
+MYOHW_FIRMWARE_VERSION_MAJOR = 1
+MYOHW_FIRMWARE_VERSION_MINOR = 2
+myohw_firmware_version_major = MYOHW_FIRMWARE_VERSION_MAJOR
+myohw_firmware_version_minor = MYOHW_FIRMWARE_VERSION_MINOR
 
 
 # myohw_control_commands Control Commands
@@ -202,7 +201,7 @@ class Vibration_Type(Enum):
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_deep_sleep_t, 2);
 
 # Extended vibration command.
-# #define MYOHW_COMMAND_VIBRATE2_STEPS 6
+MYOHW_COMMAND_VIBRATE2_STEPS = 6
 # typedef struct MYOHW_PACKED {
 #     myohw_command_header_t header; ///< command == myohw_command_vibrate2. payload_size == 18.
 #     struct MYOHW_PACKED {
@@ -275,12 +274,12 @@ class Classifier_Model_Type(Enum):
 # MYOHW_STATIC_ASSERT_SIZED(myohw_imu_data_t, 20);
 
 # Default IMU sample rate in Hz.
-# #define MYOHW_DEFAULT_IMU_SAMPLE_RATE 50
+MYOHW_DEFAULT_IMU_SAMPLE_RATE = 50
 
 # Scale values for unpacking IMU data
-# #define MYOHW_ORIENTATION_SCALE   16384.0f ///< See myohw_imu_data_t::orientation
-# #define MYOHW_ACCELEROMETER_SCALE 2048.0f  ///< See myohw_imu_data_t::accelerometer
-# #define MYOHW_GYROSCOPE_SCALE     16.0f    ///< See myohw_imu_data_t::gyroscope
+MYOHW_ORIENTATION_SCALE = 16384.0  # See myohw_imu_data_t::orientation
+MYOHW_ACCELEROMETER_SCALE = 2048.0  # See myohw_imu_data_t::accelerometer
+MYOHW_GYROSCOPE_SCALE = 16.0  # See myohw_imu_data_t::gyroscope
 
 
 class Motion_Event_Type(Enum):
@@ -355,7 +354,7 @@ class Sync_Result(Enum):
 # MYOHW_STATIC_ASSERT_SIZED(myohw_classifier_event_t, 3);
 
 # The rate that EMG events are streamed over Bluetooth.
-# #define MYOHW_EMG_DEFAULT_STREAMING_RATE 200
+MYOHW_EMG_DEFAULT_STREAMING_RATE = 200
 
 # Raw EMG data received in a myohw_att_handle_emg_data_# attribute.
 # Value layout for myohw_att_handle_emg_data_#.

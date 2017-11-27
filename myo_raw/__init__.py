@@ -10,28 +10,7 @@ import re
 import struct
 from serial.tools.list_ports import comports
 from .bluetooth import BT
-
-
-class Arm(enum.Enum):
-    UNKNOWN = 0
-    RIGHT = 1
-    LEFT = 2
-
-
-class XDirection(enum.Enum):
-    UNKNOWN = 0
-    X_TOWARD_WRIST = 1
-    X_TOWARD_ELBOW = 2
-
-
-class Pose(enum.Enum):
-    REST = 0
-    FIST = 1
-    WAVE_IN = 2
-    WAVE_OUT = 3
-    FINGERS_SPREAD = 4
-    THUMB_TO_PINKY = 5
-    UNKNOWN = 255
+from .myohw import *
 
 
 class MyoRaw(object):
@@ -76,7 +55,7 @@ class MyoRaw(object):
             p = self.bt.recv_packet()
             print('scan response:', p)
 
-            if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):
+            if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):  # This is MYO_SERVICE_INFO_UUID
                 addr = list(list(p.payload[2:8]))
                 break
         self.bt.end_scan()
@@ -176,9 +155,9 @@ class MyoRaw(object):
                 typ, val, xdir, _, _, _ = struct.unpack('<6B', pay)
 
                 if typ == 1:  # on arm
-                    self.on_arm(Arm(val), XDirection(xdir))
+                    self.on_arm(Arm(val), X_Direction(xdir))
                 elif typ == 2:  # removed from arm
-                    self.on_arm(Arm.UNKNOWN, XDirection.UNKNOWN)
+                    self.on_arm(Arm.myohw_arm_unknown, X_Direction.myohw_x_direction_unknown)
                 elif typ == 3:  # pose
                     self.on_pose(Pose(val))
             # Read battery characteristic handle

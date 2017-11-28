@@ -14,7 +14,7 @@ MYO_SERVICE_INFO_UUID = [
     0xb9, 0xde, 0x04, 0xa9,
     0x01, 0x00, 0x06, 0xd5]
 
-kMyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', 0x42, 0x48, 0x12, 0x4a, 0x7f, 0x2c, 0x48, 0x47, 0xb9, 0xde, 0x04, 0xa9, 0x01, 0x00, 0x06, 0xd5)
+kMyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', *MYO_SERVICE_INFO_UUID)
 
 # The number of EMG sensors that a Myo has.
 myohw_num_emg_sensors = 8
@@ -76,10 +76,12 @@ class Pose:
     myohw_pose_unknown        = 0xffff
 
 
-def myohw_fw_info(serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved):
+def myohw_fw_info(data):
     """ Various parameters that may affect the behaviour of this Myo armband.
     The Myo library reads this attribute when a connection is established.
     Value layout for the myohw_att_handle_fw_info attribute. """
+
+    serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved = unpack('BBBBBBHBBBBBB', data)
     return {
         "serial_number": serial_number,  # Unique serial number of this Myo.
         "unlock_pose": unlock_pose,  # Pose that should be interpreted as the unlock pose. See myohw_pose_t.
@@ -91,7 +93,6 @@ def myohw_fw_info(serial_number, unlock_pose, active_classifier_type, active_cla
         "sku": sku,  # SKU value of the device. See myohw_sku_t
         "reserved": reserved  # Reserved for future use; populated with zeros.
     }
-# typedef struct MYOHW_PACKED
 # {
 #     uint8_t serial_number[6];        ///< Unique serial number of this Myo.
 #     uint16_t unlock_pose;            ///< Pose that should be interpreted as the unlock pose. See myohw_pose_t.
@@ -105,7 +106,10 @@ def myohw_fw_info(serial_number, unlock_pose, active_classifier_type, active_cla
 # } myohw_fw_info_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_fw_info_t, 20);
 
-
+def unpack_fw_info(myohw_fw_info_t):
+    # return serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved
+    # do nothing.
+    return
 
 
 class Sku(Enum):
@@ -123,19 +127,14 @@ class Hardware_Rev(Enum):
     # myohw_num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
 
 
-def myohw_fw_version(major, minor, patch, hardware_rev):
+def myohw_fw_version():
     """ Version information for the Myo firmware.
     Value layout for the myohw_att_handle_fw_version attribute.
     Minor version is incremented for changes in this interface.
     Patch version is incremented for firmware changes that do not introduce changes in this interface. """
-    return {
-        'major': major,
-        'minor': minor,
-        'patch': patch,
-        'hardware_rev': hardware_rev  # Myo hardware revision. See myohw_hardware_rev.
-    }
-# typedef struct MYOHW_PACKED
-# {
+    major, minor, patch, hardware_rev = unpack('HHHH', data)
+    # Myo hardware revision. See myohw_hardware_rev.
+    return major, minor, patch, hardware_rev
 #     uint16_t major;
 #     uint16_t minor;
 #     uint16_t patch;
@@ -145,15 +144,13 @@ def myohw_fw_version(major, minor, patch, hardware_rev):
 
 MYOHW_FIRMWARE_VERSION_MAJOR = 1
 MYOHW_FIRMWARE_VERSION_MINOR = 2
-myohw_firmware_version_major = MYOHW_FIRMWARE_VERSION_MAJOR
-myohw_firmware_version_minor = MYOHW_FIRMWARE_VERSION_MINOR
 
 
 # myohw_control_commands Control Commands
 
-
 class Command(Enum):
     """ Kinds of Myo Commands """
+
     myohw_command_set_mode               = 0x01  # Set EMG and IMU modes. See myohw_command_set_mode_t.
     myohw_command_vibrate                = 0x03  # Vibrate. See myohw_command_vibrate_t.
     myohw_command_deep_sleep             = 0x04  # Put Myo into deep sleep. See myohw_command_deep_sleep_t.
@@ -161,21 +158,18 @@ class Command(Enum):
     myohw_command_set_sleep_mode         = 0x09  # Set sleep mode. See myohw_command_set_sleep_mode_t.
     myohw_command_unlock                 = 0x0a  # Unlock Myo. See myohw_command_unlock_t.
     myohw_command_user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
-                                                 # See myohw_command_user_action_t.
+    # See myohw_command_user_action_t.
 
 
-def myohw_command_header(command, payload_size):
+def command_header(command, payload_size):
     """ Header that every command begins with. """
-    return {
-        'command': command,  # Command to send. See myohw_command_t.
-        'payload_size': payload_size  # Number of bytes in payload.
-    }
-# Header that every command begins with.
-# typedef struct MYOHW_PACKED {
-#     uint8_t command;        ///< Command to send. See myohw_command_t.
-#     uint8_t payload_size;   ///< Number of bytes in payload.
+    return pack('BB', command, payload_size)
+    #     uint8_t command;        ///< Command to send. See myohw_command_t.
+    #     uint8_t payload_size;   ///< Number of bytes in payload.
 # } myohw_command_header_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_header_t, 2);
+
+
 
 
 class EMG_Mode(Enum):
@@ -200,16 +194,14 @@ class Classifier_Mode(Enum):
     myohw_classifier_mode_enabled  = 0x01  # Send classifier events (poses and arm events).
 
 
-def myohw_command_set_mode(emg_mode, imu_mode, classifier_mode):
+def command_set_mode(emg_mode, imu_mode, classifier_mode):
     """ Command to set EMG and IMU modes. """
-    return {
-        'header': myohw_command_header(Command.myohw_command_set_mode.value, 3),  # command == myohw_command_set_mode. payload_size = 3.
-        'emg_mode': emg_mode,  # EMG sensor mode. See myohw_emg_mode_t.
-        'imu_mode': imu_mode,  # IMU mode. See myohw_imu_mode_t.
-        'classifier_mode': classifier_mode  # Classifier mode. See myohw_classifier_mode_t.
-    }
-
-# typedef struct MYOHW_PACKED {
+    header = command_header(Command.myohw_command_set_mode.value, 3)  # command == myohw_command_set_mode. payload_size = 3. 
+    payload = pack('BBB', emg_mode, imu_mode, classifier_mode)
+    # EMG sensor mode. See myohw_emg_mode_t.
+    # IMU mode. See myohw_imu_mode_t.
+    # Classifier mode. See myohw_classifier_mode_t.
+    return header + payload
 #     myohw_command_header_t header; ///< command == myohw_command_set_mode. payload_size = 3.
 #     uint8_t emg_mode;              ///< EMG sensor mode. See myohw_emg_mode_t.
 #     uint8_t imu_mode;              ///< IMU mode. See myohw_imu_mode_t.
@@ -225,26 +217,36 @@ class Vibration_Type(Enum):
     myohw_vibration_medium = 0x02  # Vibrate for a medium amount of time.
     myohw_vibration_long   = 0x03  # Vibrate for a long amount of time.
 
-# Vibration command.
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_vibrate. payload_size == 1.
-#     uint8_t type;                  ///< See myohw_vibration_type_t.
+
+def command_vibrate(type):
+    """ Vibration command."""
+    header = command_header(Command.myohw_command_vibrate.value, 1)  #  command == myohw_command_vibrate. payload_size == 1.
+    payload = pack('B', type)  # See myohw_vibration_type_t.
+    return header + payload
 # } myohw_command_vibrate_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_vibrate_t, 3);
 
-# Deep sleep command.
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_deep_sleep. payload_size == 0.
+
+def command_deep_sleep():
+    """ Deep sleep command. """
+    return command_header(Command.myohw_command_deep_sleep.value, 0)  # command == myohw_command_deep_sleep. payload_size == 0. 
 # } myohw_command_deep_sleep_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_deep_sleep_t, 2);
 
-# Extended vibration command.
-MYOHW_COMMAND_VIBRATE2_STEPS = 6
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_vibrate2. payload_size == 18.
+
+def command_vibrate2(duration, strength):
+    """ Extended vibration command. """
+    MYOHW_COMMAND_VIBRATE2_STEPS = 6
+    header = command_header(Command.myohw_command_vibrate2.value, 18)  # command == myohw_command_vibrate2. payload_size == 18.
+    steps = pack('HB', 
+        duration,  # duration (in ms) of the vibration
+        strength)  # strength of vibration (0 - motor off, 255 - full speed)
+    # TODO: this is wrong, the steps bit doesn't work.
+    return
+#     myohw_command_header_t header; ///< 
 #     struct MYOHW_PACKED {
-#         uint16_t duration;         ///< duration (in ms) of the vibration
-#         uint8_t strength;          ///< strength of vibration (0 - motor off, 255 - full speed)
+#         uint16_t duration;         ///< 
+#         uint8_t strength;          ///< 
 #     } steps[MYOHW_COMMAND_VIBRATE2_STEPS];
 # } myohw_command_vibrate2_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_vibrate2_t, 20);
@@ -252,19 +254,15 @@ MYOHW_COMMAND_VIBRATE2_STEPS = 6
 
 class Sleep_Mode(Enum):
     """ Sleep modes. """
-    myohw_sleep_mode_normal      = 0  # Normal sleep mode; Myo will sleep after a period of inactivity.
-    myohw_sleep_mode_never_sleep = 1  # Never go to sleep.
+    myohw_sleep_mode_normal      = 0x00  # Normal sleep mode; Myo will sleep after a period of inactivity.
+    myohw_sleep_mode_never_sleep = 0x01  # Never go to sleep.
 
 
-def myo_command_set_sleep_mode(sleep_mode):
+def command_set_sleep_mode(sleep_mode):
     """ Set sleep mode command. """
-    return {
-        'header': myohw_command_header(myohw_command_t.myohw_command_set_sleep_mode.value, 1),
-        'sleep_mode': Sleep_Mode(sleep_mode)
-    }
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_set_sleep_mode. payload_size == 1.
-#     uint8_t sleep_mode;            ///< Sleep mode. See myohw_sleep_mode_t.
+    header = command_header(Command.myohw_command_set_sleep_mode.value, 1)  # command == myohw_command_set_sleep_mode. payload_size == 1.
+    payload = pack('B', sleep_mode)  # Sleep mode. See myohw_sleep_mode_t.
+    return header + payload
 # } myohw_command_set_sleep_mode_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_set_sleep_mode_t, 3);
 
@@ -275,11 +273,13 @@ class Unlock_Type(Enum):
     myohw_unlock_timed = 0x01  # Unlock now and re-lock after a fixed timeout.
     myohw_unlock_hold  = 0x02  # Unlock now and remain unlocked until a lock command is received.
 
-# Unlock Myo command.
-# Can also be used to force Myo to re-lock.
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_unlock. payload_size == 1.
-#     uint8_t type;                  ///< Unlock type. See myohw_unlock_type_t.
+
+def command_unlock(unlock_type):
+    """ Unlock Myo command.
+    Can also be used to force Myo to re-lock. """
+    header = command_header(Command.myohw_command_unlock.value, 1) # command == myohw_command_unlock. payload_size == 1.
+    payload = pack('B', unlock_type)  # Unlock type. See myohw_unlock_type_t.
+    return header + payload
 # } myohw_command_unlock_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_unlock_t, 3);
 
@@ -289,10 +289,10 @@ class User_Action_Type(Enum):
     myohw_user_action_single = 0  # User did a single, discrete action, such as pausing a video.
 
 
-# User action command.
-# typedef struct MYOHW_PACKED {
-#     myohw_command_header_t header; ///< command == myohw_command_user_action. payload_size == 1.
-#     uint8_t type;                  ///< Type of user action that occurred. See myohw_user_action_type_t.
+def command_user_action(user_action_type):
+    """ User action command. """
+    header = command_header(Command.myohw_command_user_action.value, 1)  # command == myohw_command_user_action. payload_size == 1.
+    payload = pack('B', user_action_type)  # Type of user action that occurred. See myohw_user_action_type_t.
 # } myohw_command_user_action_t;
 # MYOHW_STATIC_ASSERT_SIZED(myohw_command_user_action_t, 3);
 
@@ -303,7 +303,10 @@ class Classifier_Model_Type(Enum):
     myohw_classifier_model_custom  = 1  # Model based on personalized user data.
 
 
-# Integrated motion data.
+def imu_data(data):
+    """ Unpack Integrated motion data. """
+    # todo
+    return
 # typedef struct MYOHW_PACKED {
 #     /// Orientation data, represented as a unit quaternion. Values are multiplied by MYOHW_ORIENTATION_SCALE.
 #     struct MYOHW_PACKED {

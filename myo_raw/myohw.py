@@ -127,7 +127,7 @@ class Hardware_Rev(Enum):
     # myohw_num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
 
 
-def myohw_fw_version():
+def myohw_fw_version(data):
     """ Version information for the Myo firmware.
     Value layout for the myohw_att_handle_fw_version attribute.
     Minor version is incremented for changes in this interface.

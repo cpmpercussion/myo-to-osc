@@ -90,7 +90,7 @@ def fw_info(data):
         "active_classifier_index": active_classifier_index,  # Index of the classifier that is currently active.
         "has_custom_classifier": has_custom_classifier,  # Whether Myo contains a valid custom classifier. 1 if it does, otherwise 0.
         "stream_indicating": stream_indicating,  # Set if the Myo uses BLE indicates to stream data, for reliable capture.
-        "sku": sku,  # SKU value of the device. See sku_t
+        "sku": sku,  # SKU value of the device. See Sku.
         "reserved": reserved  # Reserved for future use; populated with zeros.
     }
 # {
@@ -101,7 +101,7 @@ def fw_info(data):
 #     uint8_t active_classifier_index; ///< Index of the classifier that is currently active.
 #     uint8_t has_custom_classifier;   ///< Whether Myo contains a valid custom classifier. 1 if it does, otherwise 0.
 #     uint8_t stream_indicating;       ///< Set if the Myo uses BLE indicates to stream data, for reliable capture.
-#     uint8_t sku;                     ///< SKU value of the device. See sku_t
+#     uint8_t sku;                     ///< SKU value of the device. See Sku.
 #     uint8_t reserved[7];             ///< Reserved for future use; populated with zeros.
 # } fw_info_t;
 # STATIC_ASSERT_SIZED(fw_info_t, 20);
@@ -109,16 +109,16 @@ def fw_info(data):
 
 class Sku(Enum):
     """ Known Myo SKUs. """
-    sku_unknown   = 0  # Unknown SKU (default value for old firmwares)
-    sku_black_myo = 1  # Black Myo
-    sku_white_myo = 2  # White Myo
+    unknown   = 0  # Unknown SKU (default value for old firmwares)
+    black_myo = 1  # Black Myo
+    white_myo = 2  # White Myo
 
 
 class Hardware_Rev(Enum):
     """ Known Myo hardware revisions. """
-    hardware_rev_unknown = 0  # Unknown hardware revision.
-    hardware_rev_revc    = 1  # Myo Alpha (REV-C) hardware.
-    hardware_rev_revd    = 2  # Myo (REV-D) hardware.
+    unknown = 0  # Unknown hardware revision.
+    revc    = 1  # Myo Alpha (REV-C) hardware.
+    revd    = 2  # Myo (REV-D) hardware.
     # num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
 
 
@@ -133,7 +133,7 @@ def fw_version(data):
 #     uint16_t major;
 #     uint16_t minor;
 #     uint16_t patch;
-#     uint16_t hardware_rev; ///< Myo hardware revision. See hardware_rev_t.
+#     uint16_t hardware_rev; ///< Myo hardware revision. See Hardware_Rev.
 # } fw_version_t;
 # STATIC_ASSERT_SIZED(fw_version_t, 8);
 
@@ -146,23 +146,21 @@ FIRMWARE_VERSION_MINOR = 2
 class Command(Enum):
     """ Kinds of Myo Commands """
 
-    command_set_mode               = 0x01  # Set EMG and IMU modes. See command_set_mode_t.
-    command_vibrate                = 0x03  # Vibrate. See command_vibrate_t.
-    command_deep_sleep             = 0x04  # Put Myo into deep sleep. See command_deep_sleep_t.
-    command_vibrate2               = 0x07  # Extended vibrate. See command_vibrate2_t.
-    command_set_sleep_mode         = 0x09  # Set sleep mode. See command_set_sleep_mode_t.
-    command_unlock                 = 0x0a  # Unlock Myo. See command_unlock_t.
-    command_user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
-    # See command_user_action_t.
+    set_mode               = 0x01  # Set EMG and IMU modes. See set_mode_t.
+    vibrate                = 0x03  # Vibrate. See vibrate_t.
+    deep_sleep             = 0x04  # Put Myo into deep sleep. See deep_sleep_t.
+    vibrate2               = 0x07  # Extended vibrate. See vibrate2_t.
+    set_sleep_mode         = 0x09  # Set sleep mode. See set_sleep_mode_t.
+    unlock                 = 0x0a  # Unlock Myo. See unlock_t.
+    user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
+    # See user_action_t.
 
 
 def command_header(command, payload_size):
     """ Header that every command begins with. """
     return pack('BB', command, payload_size)
-    #     uint8_t command;        ///< Command to send. See command_t.
-    #     uint8_t payload_size;   ///< Number of bytes in payload.
-# } command_header_t;
-# STATIC_ASSERT_SIZED(command_header_t, 2);
+    #  command - Command to send. See Command.
+    #  payload_size - Number of bytes in payload.
 
 
 class EMG_Mode(Enum):
@@ -174,11 +172,11 @@ class EMG_Mode(Enum):
 
 class IMU_Mode(Enum):
     """ IMU modes. """
-    imu_mode_none        = 0x00  # Do not send IMU data or events.
-    imu_mode_send_data   = 0x01  # Send IMU data streams (accelerometer, gyroscope, and orientation).
-    imu_mode_send_events = 0x02  # Send motion events detected by the IMU (e.g. taps).
-    imu_mode_send_all    = 0x03  # Send both IMU data streams and motion events.
-    imu_mode_send_raw    = 0x04  # Send raw IMU data streams.
+    none        = 0x00  # Do not send IMU data or events.
+    send_data   = 0x01  # Send IMU data streams (accelerometer, gyroscope, and orientation).
+    send_events = 0x02  # Send motion events detected by the IMU (e.g. taps).
+    send_all    = 0x03  # Send both IMU data streams and motion events.
+    send_raw    = 0x04  # Send raw IMU data streams.
 
 
 class Classifier_Mode(Enum):
@@ -189,48 +187,38 @@ class Classifier_Mode(Enum):
 
 def command_set_mode(emg_mode, imu_mode, classifier_mode):
     """ Command to set EMG and IMU modes. """
-    header = command_header(Command.command_set_mode.value, 3)  # command == command_set_mode. payload_size = 3.
+    header = command_header(Command.set_mode.value, 3)  # command == set_mode. payload_size = 3.
     payload = pack('BBB', emg_mode, imu_mode, classifier_mode)
-    # EMG sensor mode. See emg_mode_t.
-    # IMU mode. See imu_mode_t.
+    # EMG sensor mode. See Emg_Mode
+    # IMU mode. See Imu_Mode.
     # Classifier mode. See classifier_mode_t.
     return header + payload
-#     command_header_t header; ///< command == command_set_mode. payload_size = 3.
-#     uint8_t emg_mode;              ///< EMG sensor mode. See emg_mode_t.
-#     uint8_t imu_mode;              ///< IMU mode. See imu_mode_t.
-#     uint8_t classifier_mode;       ///< Classifier mode. See classifier_mode_t.
-# } command_set_mode_t;
-# STATIC_ASSERT_SIZED(command_set_mode_t, 5);
 
 
 class Vibration_Type(Enum):
     """ Kinds of vibrations. """
-    vibration_none   = 0x00  # Do not vibrate.
-    vibration_short  = 0x01  # Vibrate for a short amount of time.
-    vibration_medium = 0x02  # Vibrate for a medium amount of time.
-    vibration_long   = 0x03  # Vibrate for a long amount of time.
+    vib_none   = 0x00  # Do not vibrate.
+    vib_short  = 0x01  # Vibrate for a short amount of time.
+    vib_medium = 0x02  # Vibrate for a medium amount of time.
+    vib_long   = 0x03  # Vibrate for a long amount of time.
 
 
 def command_vibrate(type):
     """ Vibration command."""
-    header = command_header(Command.command_vibrate.value, 1)  #  command == command_vibrate. payload_size == 1.
-    payload = pack('B', type)  # See vibration_type_t.
+    header = command_header(Command.vibrate.value, 1)  # command == command_vibrate. payload_size == 1.
+    payload = pack('B', type)  # See Vibration_Type
     return header + payload
-# } command_vibrate_t;
-# STATIC_ASSERT_SIZED(command_vibrate_t, 3);
 
 
 def command_deep_sleep():
     """ Deep sleep command. """
-    return command_header(Command.command_deep_sleep.value, 0)  # command == command_deep_sleep. payload_size == 0.
-# } command_deep_sleep_t;
-# STATIC_ASSERT_SIZED(command_deep_sleep_t, 2);
+    return command_header(Command.deep_sleep.value, 0)  # command == command_deep_sleep. payload_size == 0.
 
 
 def command_vibrate2(duration, strength):
     """ Extended vibration command. """
     COMMAND_VIBRATE2_STEPS = 6
-    header = command_header(Command.command_vibrate2.value, 18)  # command == command_vibrate2. payload_size == 18.
+    header = command_header(Command.vibrate2.value, 18)  # command == command_vibrate2. payload_size == 18.
     steps = pack('HB', 
         duration,  # duration (in ms) of the vibration
         strength)  # strength of vibration (0 - motor off, 255 - full speed)
@@ -247,34 +235,30 @@ def command_vibrate2(duration, strength):
 
 class Sleep_Mode(Enum):
     """ Sleep modes. """
-    sleep_mode_normal      = 0x00  # Normal sleep mode; Myo will sleep after a period of inactivity.
-    sleep_mode_never_sleep = 0x01  # Never go to sleep.
+    normal      = 0x00  # Normal sleep mode; Myo will sleep after a period of inactivity.
+    never_sleep = 0x01  # Never go to sleep.
 
 
 def command_set_sleep_mode(sleep_mode):
     """ Set sleep mode command. """
-    header = command_header(Command.command_set_sleep_mode.value, 1)  # command == command_set_sleep_mode. payload_size == 1.
-    payload = pack('B', sleep_mode)  # Sleep mode. See sleep_mode_t.
+    header = command_header(Command.set_sleep_mode.value, 1)  # command == set_sleep_mode. payload_size == 1.
+    payload = pack('B', sleep_mode)  # Sleep mode. See Sleep_Mode.
     return header + payload
-# } command_set_sleep_mode_t;
-# STATIC_ASSERT_SIZED(command_set_sleep_mode_t, 3);
 
 
 class Unlock_Type(Enum):
     """ Unlock types. """
-    unlock_lock  = 0x00  # Re-lock immediately.
-    unlock_timed = 0x01  # Unlock now and re-lock after a fixed timeout.
-    unlock_hold  = 0x02  # Unlock now and remain unlocked until a lock command is received.
+    lock  = 0x00  # Re-lock immediately.
+    timed = 0x01  # Unlock now and re-lock after a fixed timeout.
+    hold  = 0x02  # Unlock now and remain unlocked until a lock command is received.
 
 
 def command_unlock(unlock_type):
     """ Unlock Myo command.
     Can also be used to force Myo to re-lock. """
-    header = command_header(Command.command_unlock.value, 1) # command == command_unlock. payload_size == 1.
-    payload = pack('B', unlock_type)  # Unlock type. See unlock_type_t.
+    header = command_header(Command.unlock.value, 1) # command == command_unlock. payload_size == 1.
+    payload = pack('B', unlock_type)  # Unlock type. See Unlock_Type.
     return header + payload
-# } command_unlock_t;
-# STATIC_ASSERT_SIZED(command_unlock_t, 3);
 
 
 class User_Action_Type(Enum):
@@ -284,16 +268,15 @@ class User_Action_Type(Enum):
 
 def command_user_action(user_action_type):
     """ User action command. """
-    header = command_header(Command.command_user_action.value, 1)  # command == command_user_action. payload_size == 1.
+    header = command_header(Command.user_action.value, 1)  # command == command_user_action. payload_size == 1.
     payload = pack('B', user_action_type)  # Type of user action that occurred. See user_action_type_t.
-# } command_user_action_t;
-# STATIC_ASSERT_SIZED(command_user_action_t, 3);
+    return header + payload
 
 
 class Classifier_Model_Type(Enum):
     """ Classifier model types. """
-    classifier_model_builtin = 0  # Model built into the classifier package.
-    classifier_model_custom  = 1  # Model based on personalized user data.
+    builtin = 0  # Model built into the classifier package.
+    custom  = 1  # Model based on personalized user data.
 
 
 def imu_data(data):
@@ -345,26 +328,26 @@ class Motion_Event_Type(Enum):
 
 class Classifier_Event_Type(Enum):
     """ Types of classifier events. """
-    classifier_event_arm_synced   = 0x01
-    classifier_event_arm_unsynced = 0x02
-    classifier_event_pose         = 0x03
-    classifier_event_unlocked     = 0x04
-    classifier_event_locked       = 0x05
-    classifier_event_sync_failed  = 0x06
+    arm_synced   = 0x01
+    arm_unsynced = 0x02
+    pose         = 0x03
+    unlocked     = 0x04
+    locked       = 0x05
+    sync_failed  = 0x06
 
 
 class Arm(Enum):
     """ Enumeration identifying a right arm or left arm. """
-    arm_right   = 0x01
-    arm_left    = 0x02
-    arm_unknown = 0xff
+    right   = 0x01
+    left    = 0x02
+    unknown = 0xff
 
 
 class X_Direction(Enum):
     """ Possible directions for Myo's +x axis relative to a user's arm. """
-    x_direction_toward_wrist = 0x01
-    x_direction_toward_elbow = 0x02
-    x_direction_unknown      = 0xff
+    toward_wrist = 0x01
+    toward_elbow = 0x02
+    unknown      = 0xff
 
 
 class Sync_Result(Enum):

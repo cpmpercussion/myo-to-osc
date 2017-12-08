@@ -65,15 +65,15 @@ class Standard_Services(Enum):
     DeviceName                    = 0x2a00  # Device name data. Read/write characteristic.
 
 
-class Pose:
+class Pose(Enum):
     """ Supported Poses. """
-    pose_rest           = 0x0000
-    pose_fist           = 0x0001
-    pose_wave_in        = 0x0002
-    pose_wave_out       = 0x0003
-    pose_fingers_spread = 0x0004
-    pose_double_tap     = 0x0005
-    pose_unknown        = 0xffff
+    rest           = 0x0000
+    fist           = 0x0001
+    wave_in        = 0x0002
+    wave_out       = 0x0003
+    fingers_spread = 0x0004
+    double_tap     = 0x0005
+    unknown        = 0xffff
 
 
 def fw_info(data):

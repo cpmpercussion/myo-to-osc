@@ -5,9 +5,9 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
-import enum
 import re
 import struct
+import binascii
 from serial.tools.list_ports import comports
 from .bluetooth import BT
 from .myohw import *
@@ -41,6 +41,29 @@ class MyoRaw(object):
     def run(self, timeout=None):
         self.bt.recv_packet(timeout)
 
+    def scan_myo(self):
+        print('Scanning for a Myo...')
+        self.bt.discover()
+        addr = None
+        while addr is None:
+            p = self.bt.recv_packet()
+            # print('scan response:', p)
+            if p.payload.endswith(kMyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
+                addr = list(list(p.payload[2:8]))
+                mac_address_string = "%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))
+                print("Found a Myo:", mac_address_string)  # print the Myo's mac address
+                print(addr)
+                break
+        self.bt.end_scan()
+        return addr
+
+    def mac_string_to_ints(self, mac_string):
+        """Returns a list of ints from standard mac address notation"""
+        split_addr = mac_string.split(':')[::-1]  # split by :, then put in network order
+        addr_bytes = [binascii.unhexlify(n) for n in split_addr]  # change to bytes
+        addr_ints = [struct.unpack("B", n)[0] for n in addr_bytes]  # change to ints
+        return addr_ints
+
     def connect(self, filtered=False, address=None):
         # stop everything from before
         self.bt.end_scan()
@@ -48,21 +71,13 @@ class MyoRaw(object):
         self.bt.disconnect(1)
         self.bt.disconnect(2)
 
-        # start scanning
+        # Calculate address or scan for Myo if necessary.
         if address is None:
-            print('scanning...')
-            self.bt.discover()
-            while True:
-                p = self.bt.recv_packet()
-                # print('scan response:', p)
-
-                if p.payload.endswith(kMyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
-                    addr = list(list(p.payload[2:8]))
-                    print("Found a Myo")
-                    print("%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))) # print the Myo's mac address
-                    break
-            self.bt.end_scan()
-        
+            addr = self.scan_myo()
+        else:
+            addr = self.mac_string_to_ints(address)
+            print("Connecting to Myo:", address)
+            print("Byte Address:", addr)
 
         # connect and wait for status event
         conn_pkt = self.bt.connect(addr)
@@ -72,7 +87,7 @@ class MyoRaw(object):
         # get firmware version
         fw = self.read_attr(0x17)
         _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
-        print('firmware version: %d.%d.%d.%d' % (v0, v1, v2, v3))
+        print('firmware: %d.%d.%d.%d' % (v0, v1, v2, v3))
 
         self.old = (v0 == 0)
 
@@ -161,7 +176,7 @@ class MyoRaw(object):
                 if typ == 1:  # on arm
                     self.on_arm(Arm(val), X_Direction(xdir))
                 elif typ == 2:  # removed from arm
-                    self.on_arm(Arm.myohw_arm_unknown, X_Direction.myohw_x_direction_unknown)
+                    self.on_arm(Arm.unknown, X_Direction.unknown)
                 elif typ == 3:  # pose
                     self.on_pose(Pose(val))
             # Read battery characteristic handle
@@ -249,7 +264,7 @@ class MyoRaw(object):
         self.write_attr(0x19, b'\x01\x03\x01\x01\x01')  # Set EMG and IMU, payload size = 3, EMG on, IMU on, classifier on
         self.write_attr(0x28, b'\x01\x00')  # Suscribe to EMG notifications
         self.write_attr(0x1d, b'\x01\x00')  # Suscribe to IMU notifications
-        self.write_attr(0x19, b'\x09\x01\x01\x00\x00')  # Set sleep mode, payload size = 1, never go to sleep, don't know, don't know
+        self.write_attr(0x19, command_set_sleep_mode(Sleep_Mode.never_sleep.value) + b'\x00\x00')  # Set sleep mode, payload size = 1, never go to sleep, don't know, don't know
         self.write_attr(0x1d, b'\x01\x00')  # Suscribe to IMU notifications
         self.write_attr(0x19, b'\x01\x03\x00\x01\x00')  # Set EMG and IMU, payload size = 3, EMG off, IMU on, classifier off
         self.write_attr(0x28, b'\x01\x00')  # Suscribe to EMG notifications

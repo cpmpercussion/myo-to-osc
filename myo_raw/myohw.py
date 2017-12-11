@@ -10,10 +10,10 @@ from struct import pack, unpack
 
 
 # Characteristic handles from MyoLinux
-class MyoCharacteristics(Enum):
+class MyoChars(Enum):
     """Handles for Bluetooth Characteristics for the Myo. Borrowed from MyoLinux."""
     # ControlService
-    MyoInfoCharacteristic = 0x0
+    MyoInfoCharacteristic = 0x00
     FirmwareVersionCharacteristic = 0x17
     CommandCharacteristic = 0x19
     # ImuDataService
@@ -22,6 +22,11 @@ class MyoCharacteristics(Enum):
     # MotionEventCharacteristic   = 0x0
     # ClassifierService
     # ClassifierEventCharacteristic = 0x0
+    # Arm Notifications
+    ClassifierCharacteristic = 0x23
+    ArmDescriptor = 0x24
+    BatteryCharacteristic = 0x11
+    BatteryDescriptor = 0x12
     # EmgDataService
     EmgData0Characteristic = 0x2b
     EmgData1Characteristic = 0x2e
@@ -33,7 +38,13 @@ class MyoCharacteristics(Enum):
     EmgData3Descriptor = 0x35
     # BatteryService
     # BatteryLevelCharacteristic  = 0x0
-    DeviceName = 0x3
+    DeviceName = 0x03
+
+
+MYO_EMG_CHARACTERISTICS = [MyoChars.EmgData0Characteristic.value,
+                           MyoChars.EmgData1Characteristic.value,
+                           MyoChars.EmgData2Characteristic.value,
+                           MyoChars.EmgData3Characteristic.value]
 
 
 MYO_SERVICE_INFO_UUID = [
@@ -304,25 +315,18 @@ def command_user_action(user_action_type):
 class Classifier_Model_Type(Enum):
     """ Classifier model types. """
     builtin = 0  # Model built into the classifier package.
-    custom  = 1  # Model based on personalized user data.
+    custom = 1  # Model based on personalized user data.
 
 
 def imu_data(data):
     """ Unpack Integrated motion data. """
     # todo
-    return
-# typedef struct PACKED {
-#     /// Orientation data, represented as a unit quaternion. Values are multiplied by ORIENTATION_SCALE.
-#     struct PACKED {
-#         int16_t w, x, y, z;
-#     } orientation;
+    values = unpack('<10h', data)
+    quaternion = values[:4]  # Orientation data, represented as a unit quaternion. Values are multiplied by ORIENTATION_SCALE.
+    acceleration = vals[4:7]  # Accelerometer data. In units of g. Range of + -16. Values are multiplied by ACCELEROMETER_SCALE.
+    gyroscope = vals[7:10]  # Gyroscope data. In units of deg/s. Range of + -2000. Values are multiplied by GYROSCOPE_SCALE.
+    return quaternion, acceleration, gyroscope
 
-#     int16_t accelerometer[3]; ///< Accelerometer data. In units of g. Range of + -16.
-#                               ///< Values are multiplied by ACCELEROMETER_SCALE.
-#     int16_t gyroscope[3];     ///< Gyroscope data. In units of deg/s. Range of + -2000.
-#                               ///< Values are multiplied by GYROSCOPE_SCALE.
-# } imu_data_t;
-# STATIC_ASSERT_SIZED(imu_data_t, 20);
 
 # Default IMU sample rate in Hz.
 DEFAULT_IMU_SAMPLE_RATE = 50
@@ -383,10 +387,13 @@ class Sync_Result(Enum):
     sync_failed_too_hard = 0x01  # Sync gesture was performed too hard.
 
 
-# Classifier event data received in a att_handle_classifier_event attribute.
-# typedef struct PACKED {
-#     uint8_t type; ///< See classifier_event_type_t
+def classifier_event(data):
+    """" Classifier event data received in a att_handle_classifier_event attribute. """
+    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)
+    return cla_type, event_value, x_direction
 
+
+#     uint8_t type; ///< See classifier_event_type_t
 #     /// Event-specific data
 #     union PACKED {
 #         /// For classifier_event_arm_synced events.
@@ -407,10 +414,10 @@ class Sync_Result(Enum):
 # The rate that EMG events are streamed over Bluetooth.
 EMG_DEFAULT_STREAMING_RATE = 200
 
-# Raw EMG data received in a att_handle_emg_data_# attribute.
-# Value layout for att_handle_emg_data_#.
-# typedef struct PACKED {
-#     int8_t sample1[8];       ///< 1st sample of EMG data.
-#     int8_t sample2[8];       ///< 2nd sample of EMG data.
-# } emg_data_t;
-# STATIC_ASSERT_SIZED(emg_data_t, 16);
+
+def emg_data(data):
+    """ Unpacks raw data received in an att_handle_emg_data attribute."""
+    emg1 = unpack('<8b', data[:8])  # 1st sample of EMG data. #     int8_t sample1[8];
+    emg2 = unpack('<8b', data[8:])  # 2nd sample of EMG data. #     int8_t sample2[8];
+    # should these be unpacked when they arrive?
+    return emg1, emg2

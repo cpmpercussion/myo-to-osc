@@ -14,19 +14,20 @@ class MyoChars(Enum):
     """Handles for Bluetooth Characteristics for the Myo. Borrowed from MyoLinux."""
     # ControlService
     MyoInfoCharacteristic = 0x00
+    DeviceName = 0x03
+    BatteryCharacteristic = 0x11
+    BatteryDescriptor = 0x12
     FirmwareVersionCharacteristic = 0x17
     CommandCharacteristic = 0x19
     # ImuDataService
     IMUDataCharacteristic = 0x1c
     IMUDataDescriptor = 0x1d
-    # MotionEventCharacteristic   = 0x0
-    # ClassifierService
-    # ClassifierEventCharacteristic = 0x0
     # Arm Notifications
     ClassifierCharacteristic = 0x23
     ArmDescriptor = 0x24
-    BatteryCharacteristic = 0x11
-    BatteryDescriptor = 0x12
+    # EMG.
+    EMGCharacteristic = 0x27  # Extra Mystery EMG handle Used in handle_data.
+    EMGDescriptor = 0x28  # Marked as hidden EMG notification. Subscribe to EMG notifications.
     # EmgDataService
     EmgData0Characteristic = 0x2b
     EmgData1Characteristic = 0x2e
@@ -36,9 +37,6 @@ class MyoChars(Enum):
     EmgData1Descriptor = 0x2f
     EmgData2Descriptor = 0x32
     EmgData3Descriptor = 0x35
-    # BatteryService
-    # BatteryLevelCharacteristic  = 0x0
-    DeviceName = 0x03
 
 
 MYO_EMG_CHARACTERISTICS = [MyoChars.EmgData0Characteristic.value,
@@ -182,24 +180,24 @@ FIRMWARE_VERSION_MINOR = 2
 
 # control_commands Control Commands
 
+
 class Command(Enum):
     """ Kinds of Myo Commands """
-
-    set_mode               = 0x01  # Set EMG and IMU modes. See set_mode_t.
-    vibrate                = 0x03  # Vibrate. See vibrate_t.
-    deep_sleep             = 0x04  # Put Myo into deep sleep. See deep_sleep_t.
-    vibrate2               = 0x07  # Extended vibrate. See vibrate2_t.
-    set_sleep_mode         = 0x09  # Set sleep mode. See set_sleep_mode_t.
-    unlock                 = 0x0a  # Unlock Myo. See unlock_t.
-    user_action            = 0x0b  # Notify user that an action has been recognized / confirmed.
-    # See user_action_t.
+    set_mode = 0x01  # Set EMG and IMU modes. See set_mode_t.
+    vibrate = 0x03  # Vibrate. See vibrate_t.
+    deep_sleep = 0x04  # Put Myo into deep sleep. See deep_sleep_t.
+    vibrate2 = 0x07  # Extended vibrate. See vibrate2_t.
+    set_sleep_mode = 0x09  # Set sleep mode. See set_sleep_mode_t.
+    unlock = 0x0a  # Unlock Myo. See unlock_t.
+    user_action = 0x0b  # Notify user that an action has been recognized / confirmed. See user_action_t.
 
 
 def command_header(command, payload_size):
     """ Header that every command begins with. """
-    return pack('BB', command, payload_size)
     #  command - Command to send. See Command.
     #  payload_size - Number of bytes in payload.
+    return pack('BB', command, payload_size)
+
 
 
 class EMG_Mode(Enum):
@@ -220,8 +218,8 @@ class IMU_Mode(Enum):
 
 class Classifier_Mode(Enum):
     """Classifier Modes. """
-    classifier_mode_disabled = 0x00  # Disable and reset the internal state of the onboard classifier.
-    classifier_mode_enabled = 0x01  # Send classifier events (poses and arm events).
+    disabled = 0x00  # Disable and reset the internal state of the onboard classifier.
+    enabled = 0x01  # Send classifier events (poses and arm events).
 
 
 def command_set_mode(emg_mode, imu_mode, classifier_mode):

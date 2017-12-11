@@ -48,7 +48,7 @@ class MyoRaw(object):
         while addr is None:
             p = self.bt.recv_packet()
             # print('scan response:', p)
-            if p.payload.endswith(kMyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
+            if p.payload.endswith(MyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
                 addr = list(list(p.payload[2:8]))
                 mac_address_string = "%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))
                 print("Found a Myo:", mac_address_string)  # print the Myo's mac address
@@ -85,7 +85,7 @@ class MyoRaw(object):
         self.bt.wait_event(3, 0)
 
         # get firmware version
-        fw = self.read_attr(0x17)
+        fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
         _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
         print('firmware: %d.%d.%d.%d' % (v0, v1, v2, v3))
 
@@ -94,17 +94,17 @@ class MyoRaw(object):
         if self.old:
             # don't know what these do; Myo Connect sends them, though we get data
             # fine without them
-            self.write_attr(0x19, b'\x01\x02\x00\x00')
+            self.write_attr(MyoChars.CommandCharacteristic.value, b'\x01\x02\x00\x00')
             # Subscribe for notifications from 4 EMG data channels
-            self.write_attr(0x2f, b'\x01\x00')
-            self.write_attr(0x2c, b'\x01\x00')
-            self.write_attr(0x32, b'\x01\x00')
-            self.write_attr(0x35, b'\x01\x00')
+            self.write_attr(MyoChars.EmgData0Descriptor.value, b'\x01\x00')
+            self.write_attr(MyoChars.EmgData1Descriptor.value, b'\x01\x00')
+            self.write_attr(MyoChars.EmgData2Descriptor.value, b'\x01\x00')
+            self.write_attr(MyoChars.EmgData3Descriptor.value, b'\x01\x00')
 
             # enable EMG data
             self.write_attr(0x28, b'\x01\x00')
             # enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
+            self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')
 
             # Sampling rate of the underlying EMG sensor, capped to 1000. If it's
             # less than 1000, emg_hz is correct. If it is greater, the actual
@@ -119,20 +119,20 @@ class MyoRaw(object):
             imu_hz = 50
 
             # send sensor parameters, or we don't get any data
-            self.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
+            self.write_attr(MyoChars.CommandCharacteristic.value, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         else:
-            name = self.read_attr(0x03)
+            name = self.read_attr(MyoChars.DeviceName.value)
             print('device name: %s' % name.payload)
 
             # enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
+            self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')
             # enable on/off arm notifications
-            self.write_attr(0x24, b'\x02\x00')
+            self.write_attr(MyoChars.ArmDescriptor, b'\x02\x00')
             # enable EMG notifications
             self.start_raw(filtered)
             # enable battery notifications
-            self.write_attr(0x12, b'\x01\x10')
+            self.write_attr(MyoChars.BatteryDescriptor, b'\x01\x10')
 
         # add data handlers
         def handle_data(p):
@@ -142,6 +142,7 @@ class MyoRaw(object):
             c, attr, typ = struct.unpack('<BHB', p.payload[:4])
             pay = p.payload[5:]
 
+            # TODO: is this just for old firmware? maybe delete.
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
                 vals = struct.unpack('<8HB', pay)
@@ -152,35 +153,30 @@ class MyoRaw(object):
                 moving = vals[8]
                 self.on_emg(emg, moving)
             # Read notification handles corresponding to the for EMG characteristics
-            elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
+            elif attr in MYO_EMG_CHARACTERISTICS:
                 '''According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
                 each characteristic sends two sequential readings in each update,
                 so the received payload is split in two samples. According to the
                 Myo BLE specification, the data type of the EMG samples is int8_t.
                 '''
-                emg1 = struct.unpack('<8b', pay[:8])
-                emg2 = struct.unpack('<8b', pay[8:])
+                emg1, emg2 = emg_data(pay)
                 self.on_emg(emg1, 0)
                 self.on_emg(emg2, 0)
             # Read IMU characteristic handle
-            elif attr == 0x1c:
-                vals = struct.unpack('<10h', pay)
-                quat = vals[:4]
-                acc = vals[4:7]
-                gyro = vals[7:10]
+            elif attr == MyoChars.IMUDataCharacteristic.value:
+                quat, acc, gyro = imu_data(pay)
                 self.on_imu(quat, acc, gyro)
             # Read classifier characteristic handle
-            elif attr == 0x23:
-                typ, val, xdir, _, _, _ = struct.unpack('<6B', pay)
-
-                if typ == 1:  # on arm
+            elif attr == MyoChars.ClassifierCharacteristic.value:
+                typ, val, xdir = classifier_event(pay)
+                if typ == Classifier_Event_Type.arm_synced.value:  # on arm
                     self.on_arm(Arm(val), X_Direction(xdir))
-                elif typ == 2:  # removed from arm
+                elif typ == Classifier_Event_Type.arm_unsynced.value:  # removed from arm
                     self.on_arm(Arm.unknown, X_Direction.unknown)
-                elif typ == 3:  # pose
+                elif typ == Classifier_Event_Type.pose.value:  # pose
                     self.on_pose(Pose(val))
             # Read battery characteristic handle
-            elif attr == 0x11:
+            elif attr == MyoChars.BatteryCharacteristic.value:
                 battery_level = ord(pay)
                 self.on_battery(battery_level)
             else:

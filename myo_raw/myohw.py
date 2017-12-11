@@ -8,6 +8,34 @@ Python version 2017.
 from enum import Enum
 from struct import pack, unpack
 
+
+# Characteristic handles from MyoLinux
+class MyoCharacteristics(Enum):
+    """Handles for Bluetooth Characteristics for the Myo. Borrowed from MyoLinux."""
+    # ControlService
+    MyoInfoCharacteristic = 0x0
+    FirmwareVersionCharacteristic = 0x17
+    CommandCharacteristic = 0x19
+    # ImuDataService
+    IMUDataCharacteristic = 0x1c
+    IMUDataDescriptor = 0x1d
+    # MotionEventCharacteristic   = 0x0
+    # ClassifierService
+    # ClassifierEventCharacteristic = 0x0
+    # EmgDataService
+    EmgData0Characteristic = 0x2b
+    EmgData1Characteristic = 0x2e
+    EmgData2Characteristic = 0x31
+    EmgData3Characteristic = 0x34
+    EmgData0Descriptor = 0x2c
+    EmgData1Descriptor = 0x2f
+    EmgData2Descriptor = 0x32
+    EmgData3Descriptor = 0x35
+    # BatteryService
+    # BatteryLevelCharacteristic  = 0x0
+    DeviceName = 0x3
+
+
 MYO_SERVICE_INFO_UUID = [
     0x42, 0x48, 0x12, 0x4a,
     0x7f, 0x2c, 0x48, 0x47,

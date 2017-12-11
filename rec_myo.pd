@@ -1,0 +1,13 @@
+#N canvas 748 91 450 300 10;
+#X obj 88 83 netreceive -u -b;
+#X obj 88 106 oscparse;
+#X obj 88 31 loadbang;
+#X obj 88 129 list trim;
+#X msg 88 55 listen 3000;
+#X obj 89 153 route quat acc gyr emg;
+#X obj 100 203 print;
+#X connect 0 0 1 0;
+#X connect 1 0 3 0;
+#X connect 2 0 4 0;
+#X connect 3 0 5 0;
+#X connect 4 0 0 0;

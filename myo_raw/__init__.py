@@ -39,6 +39,7 @@ class MyoRaw(object):
         return None
 
     def run(self, timeout=None):
+        """ Receive BLE packets """
         self.bt.recv_packet(timeout)
 
     def scan_myo(self):
@@ -86,59 +87,68 @@ class MyoRaw(object):
         print('name:', self.get_name())
         print('firmware: %d.%d.%d.%d' % self.get_firmware())
 
-        #  Subscribe to services etc.
+        # Subscribe to services etc.
         # enable IMU data
-        # self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')
+        self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')
         # enable on/off arm notifications
-        # self.write_attr(MyoChars.ArmDescriptor, b'\x02\x00')
+        self.write_attr(MyoChars.ArmDescriptor.value, b'\x02\x00')
         # enable EMG notifications
-        # self.start_raw(filtered)
+        #self.write_attr(MyoChars.EMGDescriptor.value, b'\x01\x00')  # Not needed for raw signals # What's this handle?
+
+        self.write_attr(MyoChars.EmgData0Descriptor.value, b'\x01\x00')  # Suscribe to EmgData0Characteristic
+        self.write_attr(MyoChars.EmgData1Descriptor.value, b'\x01\x00')  # Suscribe to EmgData1Characteristic
+        self.write_attr(MyoChars.EmgData2Descriptor.value, b'\x01\x00')  # Suscribe to EmgData2Characteristic
+        self.write_attr(MyoChars.EmgData3Descriptor.value, b'\x01\x00')  # Suscribe to EmgData3Characteristic
+
+        # self.start_raw(filtered=False)
         # enable battery notifications
-        # self.write_attr(MyoChars.BatteryDescriptor, b'\x01\x10')
+        self.write_attr(MyoChars.BatteryDescriptor.value, b'\x01\x10')
+
+        # Handler function:
+        def handle_ble_data(p):
+            """ Handle Data sent from the Bluetooth Connection. """
+            if (p.cls, p.cmd) != (4, 5):
+                return
+            c, attr, typ = struct.unpack('<BHB', p.payload[:4])
+            pay = p.payload[5:] # chop off the first five bytes of the payload.
+            # TODO: is this just for old firmware? maybe delete.
+            if attr == MyoChars.EMGCharacteristic.value:
+                print("EMG-handle")
+                # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
+                vals = struct.unpack('<8HB', pay)
+                # not entirely sure what the last byte is, but it's a bitmask that
+                # seems to indicate which sensors think they're being moved around or
+                # something
+                emg1 = vals[:8]
+                self.on_emg(emg1)
+            # Read notification handles corresponding to the for EMG characteristics
+            elif attr in MYO_EMG_CHARACTERISTICS:
+                emg1, emg2 = emg_data(pay)
+                self.on_emg(emg1)
+                self.on_emg(emg2)
+            # Read IMU characteristic handle
+            elif attr == MyoChars.IMUDataCharacteristic.value:
+                quat, acc, gyro = imu_data(pay)
+                self.on_imu(quat, acc, gyro)
+            # Read classifier characteristic handle
+            elif attr == MyoChars.ClassifierCharacteristic.value:
+                typ, val, xdir = classifier_event(pay)
+                if typ == Classifier_Event_Type.arm_synced.value:  # on arm
+                    self.on_arm(Arm(val), X_Direction(xdir))
+                elif typ == Classifier_Event_Type.arm_unsynced.value:  # removed from arm
+                    self.on_arm(Arm.unknown, X_Direction.unknown)
+                elif typ == Classifier_Event_Type.pose.value:  # pose
+                    self.on_pose(Pose(val))
+            # Read battery characteristic handle
+            elif attr == MyoChars.BatteryCharacteristic.value:
+                print("Battery")
+                battery_level = ord(pay)
+                self.on_battery(battery_level)
+            else:
+                print('data with unknown attr: %02X %s' % (attr, p))
 
         # Add the handler function to the bluetooth connection.
-        self.bt.add_handler(self.handle_ble_data)
-
-    def handle_ble_data(self, p):
-        """ Handle Data sent from the Bluetooth Connection. """
-        if (p.cls, p.cmd) != (4, 5):
-            return
-        c, attr, typ = struct.unpack('<BHB', p.payload[:4])
-        pay = p.payload[5:]
-        # TODO: is this just for old firmware? maybe delete.
-        if attr == MyoChars.EMGCharacteristic.value:
-            # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
-            vals = struct.unpack('<8HB', pay)
-            # not entirely sure what the last byte is, but it's a bitmask that
-            # seems to indicate which sensors think they're being moved around or
-            # something
-            emg1 = vals[:8]
-            motion = vals[8]
-            self.on_emg(emg)
-        # Read notification handles corresponding to the for EMG characteristics
-        elif attr in MYO_EMG_CHARACTERISTICS:
-            emg1, emg2 = emg_data(pay)
-            self.on_emg(emg1, 0)
-            self.on_emg(emg2, 0)
-        # Read IMU characteristic handle
-        elif attr == MyoChars.IMUDataCharacteristic.value:
-            quat, acc, gyro = imu_data(pay)
-            self.on_imu(quat, acc, gyro)
-        # Read classifier characteristic handle
-        elif attr == MyoChars.ClassifierCharacteristic.value:
-            typ, val, xdir = classifier_event(pay)
-            if typ == Classifier_Event_Type.arm_synced.value:  # on arm
-                self.on_arm(Arm(val), X_Direction(xdir))
-            elif typ == Classifier_Event_Type.arm_unsynced.value:  # removed from arm
-                self.on_arm(Arm.unknown, X_Direction.unknown)
-            elif typ == Classifier_Event_Type.pose.value:  # pose
-                self.on_pose(Pose(val))
-        # Read battery characteristic handle
-        elif attr == MyoChars.BatteryCharacteristic.value:
-            battery_level = ord(pay)
-            self.on_battery(battery_level)
-        else:
-            print('data with unknown attr: %02X %s' % (attr, p))
+        self.bt.add_handler(handle_ble_data)
 
     def write_attr(self, attr, val):
         if self.conn is not None:
@@ -153,7 +163,7 @@ class MyoRaw(object):
         if self.conn is not None:
             self.bt.disconnect(self.conn)
 
-    # def start_raw(self, filtered):
+    # def start_raw(self, filtered=False):
     #     ''' To get raw EMG signals, we subscribe to the four EMG notification
     #     characteristics by writing a 0x0100 command to the corresponding handles.
     #     '''
@@ -162,12 +172,11 @@ class MyoRaw(object):
     #         self.write_attr(MyoChars.EmgData1Descriptor.value, b'\x01\x00')  # Suscribe to EmgData1Characteristic
     #         self.write_attr(MyoChars.EmgData2Descriptor.value, b'\x01\x00')  # Suscribe to EmgData2Characteristic
     #         self.write_attr(MyoChars.EmgData3Descriptor.value, b'\x01\x00')  # Suscribe to EmgData3Characteristic
-
     #     if not filtered:
     #         # self.write_attr(MyoChars.CommandCharacteristic.value, b'\x01\x03\x02\x01\x01')
-    #         self.set_mode(EMG_Mode.emg_mode_send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
+    #         self.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
 
-    #     '''By writting a 0x0100 command to handle 0x28, some kind of "hidden" EMG
+    #     '''By writing a 0x0100 command to handle 0x28, some kind of "hidden" EMG
     #     notification characteristic is activated. This characteristic is not
     #     listed on the Myo services of the offical BLE specification from Thalmic
     #     Labs. Also, in the second line where we tell the Myo to enable EMG and
@@ -182,8 +191,9 @@ class MyoRaw(object):
     #     a measure of muscle strength, but are not as useful as a truly raw signal).
     #     '''
     #     if filtered:
+    #         command = command_set_mode(0x01, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
     #         self.write_attr(MyoChars.EMGDescriptor.value, b'\x01\x00')  # Not needed for raw signals # What's this handle?
-    #         self.write_attr(MyoChars.CommandCharacteristic.value, b'\x01\x03\x01\x01\x01')
+    #         self.write_attr(MyoChars.CommandCharacteristic.value, command) # b'\x01\x03\x01\x01\x01'
 
     def get_name(self):
         """ Get the connected Myo's name. """

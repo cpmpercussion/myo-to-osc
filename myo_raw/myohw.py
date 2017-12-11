@@ -193,9 +193,9 @@ def command_header(command, payload_size):
 
 class EMG_Mode(Enum):
     """ EMG Modes. """
-    emg_mode_none = 0x00  # Do not send EMG data.
-    emg_mode_send_emg = 0x02  # Send filtered EMG data.
-    emg_mode_send_emg_raw = 0x03  # Send raw (unfiltered) EMG data.
+    none = 0x00  # Do not send EMG data.
+    send_emg = 0x02  # Send filtered EMG data.
+    send_emg_raw = 0x03  # Send raw (unfiltered) EMG data.
 
 
 class IMU_Mode(Enum):

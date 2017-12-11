@@ -28,7 +28,6 @@ class MyoChars(Enum):
     # EMG.
     EMGCharacteristic = 0x27  # Extra Mystery EMG handle Used in handle_data.
     EMGDescriptor = 0x28  # Marked as hidden EMG notification. Subscribe to EMG notifications.
-    # EmgDataService
     EmgData0Characteristic = 0x2b
     EmgData1Characteristic = 0x2e
     EmgData2Characteristic = 0x31
@@ -97,27 +96,26 @@ class Services(Enum):
 
 class Standard_Services(Enum):
     """ Standard Bluetooth device services """
-    BatteryService                = 0x180f  # Battery service
-    BatteryLevelCharacteristic    = 0x2a19  # Current battery level information. Read/notify characteristic.
-    DeviceName                    = 0x2a00  # Device name data. Read/write characteristic.
+    BatteryService = 0x180f  # Battery service
+    BatteryLevelCharacteristic = 0x2a19  # Current battery level information. Read/notify characteristic.
+    DeviceName = 0x2a00  # Device name data. Read/write characteristic.
 
 
 class Pose(Enum):
     """ Supported Poses. """
-    rest           = 0x0000
-    fist           = 0x0001
-    wave_in        = 0x0002
-    wave_out       = 0x0003
+    rest = 0x0000
+    fist = 0x0001
+    wave_in = 0x0002
+    wave_out = 0x0003
     fingers_spread = 0x0004
-    double_tap     = 0x0005
-    unknown        = 0xffff
+    double_tap = 0x0005
+    unknown = 0xffff
 
 
 def fw_info(data):
     """ Various parameters that may affect the behaviour of this Myo armband.
     The Myo library reads this attribute when a connection is established.
     Value layout for the att_handle_fw_info attribute. """
-
     serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved = unpack('BBBBBBHBBBBBB', data)
     return {
         "serial_number": serial_number,  # Unique serial number of this Myo.
@@ -167,12 +165,6 @@ def fw_version(data):
     major, minor, patch, hardware_rev = unpack('HHHH', data)
     # Myo hardware revision. See hardware_rev.
     return major, minor, patch, hardware_rev
-#     uint16_t major;
-#     uint16_t minor;
-#     uint16_t patch;
-#     uint16_t hardware_rev; ///< Myo hardware revision. See Hardware_Rev.
-# } fw_version_t;
-# STATIC_ASSERT_SIZED(fw_version_t, 8);
 
 FIRMWARE_VERSION_MAJOR = 1
 FIRMWARE_VERSION_MINOR = 2
@@ -197,7 +189,6 @@ def command_header(command, payload_size):
     #  command - Command to send. See Command.
     #  payload_size - Number of bytes in payload.
     return pack('BB', command, payload_size)
-
 
 
 class EMG_Mode(Enum):
@@ -252,22 +243,23 @@ def command_deep_sleep():
     return command_header(Command.deep_sleep.value, 0)  # command == command_deep_sleep. payload_size == 0.
 
 
-def command_vibrate2(duration, strength):
-    """ Extended vibration command. """
-    COMMAND_VIBRATE2_STEPS = 6
-    header = command_header(Command.vibrate2.value, 18)  # command == command_vibrate2. payload_size == 18.
-    steps = pack('HB', 
-        duration,  # duration (in ms) of the vibration
-        strength)  # strength of vibration (0 - motor off, 255 - full speed)
-    # TODO: this is wrong, the steps bit doesn't work.
-    return
-#     command_header_t header;
-#     struct PACKED {
-#         uint16_t duration;
-#         uint8_t strength;
-#     } steps[COMMAND_VIBRATE2_STEPS];
-# } command_vibrate2_t;
-# STATIC_ASSERT_SIZED(command_vibrate2_t, 20);
+# TODO: Fix this second vibrate command.
+# def command_vibrate2(duration, strength):
+#     """ Extended vibration command. """
+#     COMMAND_VIBRATE2_STEPS = 6
+#     header = command_header(Command.vibrate2.value, 18)  # command == command_vibrate2. payload_size == 18.
+#     steps = pack('HB', 
+#         duration,  # duration (in ms) of the vibration
+#         strength)  # strength of vibration (0 - motor off, 255 - full speed)
+#     # TODO: this is wrong, the steps bit doesn't work.
+#     return
+# #     command_header_t header;
+# #     struct PACKED {
+# #         uint16_t duration;
+# #         uint8_t strength;
+# #     } steps[COMMAND_VIBRATE2_STEPS];
+# # } command_vibrate2_t;
+# # STATIC_ASSERT_SIZED(command_vibrate2_t, 20);
 
 
 class Sleep_Mode(Enum):

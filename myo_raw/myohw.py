@@ -148,7 +148,7 @@ def fw_info(data):
 
 class Sku(Enum):
     """ Known Myo SKUs. """
-    unknown   = 0  # Unknown SKU (default value for old firmwares)
+    unknown = 0  # Unknown SKU (default value for old firmwares)
     black_myo = 1  # Black Myo
     white_myo = 2  # White Myo
 
@@ -156,8 +156,8 @@ class Sku(Enum):
 class Hardware_Rev(Enum):
     """ Known Myo hardware revisions. """
     unknown = 0  # Unknown hardware revision.
-    revc    = 1  # Myo Alpha (REV-C) hardware.
-    revd    = 2  # Myo (REV-D) hardware.
+    revc = 1  # Myo Alpha (REV-C) hardware.
+    revd = 2  # Myo (REV-D) hardware.
     # num_hardware_revs         # Number of hardware revisions known; not a valid hardware revision.
 
 
@@ -204,24 +204,24 @@ def command_header(command, payload_size):
 
 class EMG_Mode(Enum):
     """ EMG Modes. """
-    emg_mode_none         = 0x00  # Do not send EMG data.
-    emg_mode_send_emg     = 0x02  # Send filtered EMG data.
+    emg_mode_none = 0x00  # Do not send EMG data.
+    emg_mode_send_emg = 0x02  # Send filtered EMG data.
     emg_mode_send_emg_raw = 0x03  # Send raw (unfiltered) EMG data.
 
 
 class IMU_Mode(Enum):
     """ IMU modes. """
-    none        = 0x00  # Do not send IMU data or events.
-    send_data   = 0x01  # Send IMU data streams (accelerometer, gyroscope, and orientation).
+    none = 0x00  # Do not send IMU data or events.
+    send_data = 0x01  # Send IMU data streams (accelerometer, gyroscope, and orientation).
     send_events = 0x02  # Send motion events detected by the IMU (e.g. taps).
-    send_all    = 0x03  # Send both IMU data streams and motion events.
-    send_raw    = 0x04  # Send raw IMU data streams.
+    send_all = 0x03  # Send both IMU data streams and motion events.
+    send_raw = 0x04  # Send raw IMU data streams.
 
 
 class Classifier_Mode(Enum):
     """Classifier Modes. """
     classifier_mode_disabled = 0x00  # Disable and reset the internal state of the onboard classifier.
-    classifier_mode_enabled  = 0x01  # Send classifier events (poses and arm events).
+    classifier_mode_enabled = 0x01  # Send classifier events (poses and arm events).
 
 
 def command_set_mode(emg_mode, imu_mode, classifier_mode):
@@ -236,10 +236,10 @@ def command_set_mode(emg_mode, imu_mode, classifier_mode):
 
 class Vibration_Type(Enum):
     """ Kinds of vibrations. """
-    vib_none   = 0x00  # Do not vibrate.
-    vib_short  = 0x01  # Vibrate for a short amount of time.
+    vib_none = 0x00  # Do not vibrate.
+    vib_short = 0x01  # Vibrate for a short amount of time.
     vib_medium = 0x02  # Vibrate for a medium amount of time.
-    vib_long   = 0x03  # Vibrate for a long amount of time.
+    vib_long = 0x03  # Vibrate for a long amount of time.
 
 
 def command_vibrate(type):
@@ -263,10 +263,10 @@ def command_vibrate2(duration, strength):
         strength)  # strength of vibration (0 - motor off, 255 - full speed)
     # TODO: this is wrong, the steps bit doesn't work.
     return
-#     command_header_t header; ///< 
+#     command_header_t header;
 #     struct PACKED {
-#         uint16_t duration;         ///< 
-#         uint8_t strength;          ///< 
+#         uint16_t duration;
+#         uint8_t strength;
 #     } steps[COMMAND_VIBRATE2_STEPS];
 # } command_vibrate2_t;
 # STATIC_ASSERT_SIZED(command_vibrate2_t, 20);
@@ -274,7 +274,7 @@ def command_vibrate2(duration, strength):
 
 class Sleep_Mode(Enum):
     """ Sleep modes. """
-    normal      = 0x00  # Normal sleep mode; Myo will sleep after a period of inactivity.
+    normal = 0x00  # Normal sleep mode; Myo will sleep after a period of inactivity.
     never_sleep = 0x01  # Never go to sleep.
 
 
@@ -287,15 +287,15 @@ def command_set_sleep_mode(sleep_mode):
 
 class Unlock_Type(Enum):
     """ Unlock types. """
-    lock  = 0x00  # Re-lock immediately.
+    lock = 0x00  # Re-lock immediately.
     timed = 0x01  # Unlock now and re-lock after a fixed timeout.
-    hold  = 0x02  # Unlock now and remain unlocked until a lock command is received.
+    hold = 0x02  # Unlock now and remain unlocked until a lock command is received.
 
 
 def command_unlock(unlock_type):
     """ Unlock Myo command.
     Can also be used to force Myo to re-lock. """
-    header = command_header(Command.unlock.value, 1) # command == command_unlock. payload_size == 1.
+    header = command_header(Command.unlock.value, 1)  # command == command_unlock. payload_size == 1.
     payload = pack('B', unlock_type)  # Unlock type. See Unlock_Type.
     return header + payload
 
@@ -321,10 +321,10 @@ class Classifier_Model_Type(Enum):
 def imu_data(data):
     """ Unpack Integrated motion data. """
     # todo
-    values = unpack('<10h', data)
+    values = unpack('<10h', data)  # This is 20 bytes divided into 10 16bit values.
     quaternion = values[:4]  # Orientation data, represented as a unit quaternion. Values are multiplied by ORIENTATION_SCALE.
-    acceleration = vals[4:7]  # Accelerometer data. In units of g. Range of + -16. Values are multiplied by ACCELEROMETER_SCALE.
-    gyroscope = vals[7:10]  # Gyroscope data. In units of deg/s. Range of + -2000. Values are multiplied by GYROSCOPE_SCALE.
+    acceleration = values[4:7]  # Accelerometer data. In units of g. Range of + -16. Values are multiplied by ACCELEROMETER_SCALE.
+    gyroscope = values[7:10]  # Gyroscope data. In units of deg/s. Range of + -2000. Values are multiplied by GYROSCOPE_SCALE.
     return quaternion, acceleration, gyroscope
 
 
@@ -339,39 +339,32 @@ GYROSCOPE_SCALE = 16.0  # See imu_data_t::gyroscope
 
 class Motion_Event_Type(Enum):
     """ Types of motion events. """
-    motion_event_tap = 0x00,
+    motion_event_tap = 0x00
 
 
-# Motion event data received in a att_handle_motion_event attribute.
-# typedef struct PACKED {
-#     uint8_t type; /// Type type of motion event that occurred. See motion_event_type_t.
-
-#     /// Event-specific data.
-#     union PACKED {
-#         /// For motion_event_tap events.
-#         struct PACKED {
-#             uint8_t tap_direction;
-#             uint8_t tap_count;
-#         };
-#     };
-# } motion_event_t;
-# STATIC_ASSERT_SIZED(motion_event_t, 3);
+def motion_event(data):
+    """ Motion event data received in a att_handle_motion_event attribute. """
+    # For motion_event_tap events.
+    # Event_specific data.
+    event_type, tap_direction, tap_count = unpack('<3B', data)
+    # See Motion_Event_Type for event_type
+    return event_type, tap_direction, tap_count
 
 
 class Classifier_Event_Type(Enum):
     """ Types of classifier events. """
-    arm_synced   = 0x01
+    arm_synced = 0x01
     arm_unsynced = 0x02
-    pose         = 0x03
-    unlocked     = 0x04
-    locked       = 0x05
-    sync_failed  = 0x06
+    pose = 0x03
+    unlocked = 0x04
+    locked = 0x05
+    sync_failed = 0x06
 
 
 class Arm(Enum):
     """ Enumeration identifying a right arm or left arm. """
-    right   = 0x01
-    left    = 0x02
+    right = 0x01
+    left = 0x02
     unknown = 0xff
 
 
@@ -379,7 +372,7 @@ class X_Direction(Enum):
     """ Possible directions for Myo's +x axis relative to a user's arm. """
     toward_wrist = 0x01
     toward_elbow = 0x02
-    unknown      = 0xff
+    unknown = 0xff
 
 
 class Sync_Result(Enum):
@@ -389,10 +382,8 @@ class Sync_Result(Enum):
 
 def classifier_event(data):
     """" Classifier event data received in a att_handle_classifier_event attribute. """
-    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)
+    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)  # only first three bytes are in spec, what's with the second three?
     return cla_type, event_value, x_direction
-
-
 #     uint8_t type; ///< See classifier_event_type_t
 #     /// Event-specific data
 #     union PACKED {

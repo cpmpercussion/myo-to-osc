@@ -42,7 +42,7 @@ MYO_SERVICE_INFO_UUID = [
     0xb9, 0xde, 0x04, 0xa9,
     0x01, 0x00, 0x06, 0xd5]
 
-kMyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', *MYO_SERVICE_INFO_UUID)
+MyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', *MYO_SERVICE_INFO_UUID)
 
 # The number of EMG sensors that a Myo has.
 num_emg_sensors = 8

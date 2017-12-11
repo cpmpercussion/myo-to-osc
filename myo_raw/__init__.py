@@ -62,20 +62,6 @@ class MyoRaw(object):
         addr_ints = [struct.unpack("B", n)[0] for n in addr_bytes]  # change to ints
         return addr_ints
 
-    def get_name(self):
-        """ Get the connected Myo's name. """
-        name = self.read_attr(MyoChars.DeviceName.value)
-        name = name.payload[5:] # chop off the first 5 bytes? junk for some reason.
-        name = name.decode("utf-8")
-        return name
-
-    def get_firmware(self):
-        """ Get the connected Myo's firmware version. """
-        fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
-        # get firmware version.
-        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
-        return v0, v1, v2, v3
-
     def connect(self, address=None):
         """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. """
         # stop scanning and disconnect bluetooth as needed.
@@ -198,6 +184,20 @@ class MyoRaw(object):
     #     if filtered:
     #         self.write_attr(MyoChars.EMGDescriptor.value, b'\x01\x00')  # Not needed for raw signals # What's this handle?
     #         self.write_attr(MyoChars.CommandCharacteristic.value, b'\x01\x03\x01\x01\x01')
+
+    def get_name(self):
+        """ Get the connected Myo's name. """
+        name = self.read_attr(MyoChars.DeviceName.value)
+        name = name.payload[5:] # chop off the first 5 bytes? junk for some reason.
+        name = name.decode("utf-8")
+        return name
+
+    def get_firmware(self):
+        """ Get the connected Myo's firmware version. """
+        fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
+        # get firmware version.
+        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
+        return v0, v1, v2, v3
 
     def set_mode(self, emg_mode, imu_mode, cla_mode):
         """ Set the EMG, IMU and Classifier modes as described in myohw.py """

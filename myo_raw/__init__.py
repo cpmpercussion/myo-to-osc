@@ -47,12 +47,10 @@ class MyoRaw(object):
         addr = None
         while addr is None:
             p = self.bt.recv_packet()
-            # print('scan response:', p)
             if p.payload.endswith(MyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
                 addr = list(list(p.payload[2:8]))
                 mac_address_string = "%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))
                 print("Found a Myo:", mac_address_string)  # print the Myo's mac address
-                print(addr)
                 break
         self.bt.end_scan()
         return addr
@@ -64,7 +62,22 @@ class MyoRaw(object):
         addr_ints = [struct.unpack("B", n)[0] for n in addr_bytes]  # change to ints
         return addr_ints
 
+    def get_name(self):
+        """ Get the connected Myo's name. """
+        name = self.read_attr(MyoChars.DeviceName.value)
+        name = name.payload[5:] # chop off the first 5 bytes? junk for some reason.
+        name = name.decode("utf-8")
+        return name
+
+    def get_firmware(self):
+        """ Get the connected Myo's firmware version. """
+        fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
+        # get firmware version.
+        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
+        return v0, v1, v2, v3
+
     def connect(self, address=None):
+        """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. """
         # stop scanning and disconnect bluetooth as needed.
         self.bt.end_scan()
         self.bt.disconnect(0)
@@ -83,15 +96,9 @@ class MyoRaw(object):
         conn_pkt = self.bt.connect(addr)
         self.conn = list(conn_pkt.payload)[-1]
         self.bt.wait_event(3, 0)
-
-        # get firmware version.
-        fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
-        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
-        print('firmware: %d.%d.%d.%d' % (v0, v1, v2, v3))
-
-        # Get device name
-        name = self.read_attr(MyoChars.DeviceName.value)
-        print('device name: %s' % name.payload)
+        # Print out some Myo details.
+        print('name:', self.get_name())
+        print('firmware: %d.%d.%d.%d' % self.get_firmware())
 
         #  Subscribe to services etc.
         # enable IMU data
@@ -104,9 +111,9 @@ class MyoRaw(object):
         # self.write_attr(MyoChars.BatteryDescriptor, b'\x01\x10')
 
         # Add the handler function to the bluetooth connection.
-        self.bt.add_handler(handle_ble_data)
+        self.bt.add_handler(self.handle_ble_data)
 
-    def handle_ble_data(p):
+    def handle_ble_data(self, p):
         """ Handle Data sent from the Bluetooth Connection. """
         if (p.cls, p.cmd) != (4, 5):
             return

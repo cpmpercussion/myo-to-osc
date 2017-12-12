@@ -23,7 +23,7 @@ class MyoRaw(object):
         if tty is None:
             raise ValueError('Myo dongle not found!')
 
-        self.bt = BT(tty)
+        self.bt = BT(tty, baudrate=115200)
         self.conn = None
         self.emg_handlers = []
         self.imu_handlers = []
@@ -38,9 +38,9 @@ class MyoRaw(object):
                 return p[0]
         return None
 
-    def run(self, timeout=None):
+    def run(self):
         """ Receive BLE packets """
-        self.bt.recv_packet(timeout)
+        self.bt.recv_packet()
 
     def scan_myo(self):
         print('Scanning for a Myo...')

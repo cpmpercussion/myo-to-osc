@@ -7,7 +7,7 @@ from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
 
-osc_client = udp_client.SimpleUDPClient("localhost", 3000)
+osc_client = udp_client.SimpleUDPClient("localhost", 3000)  # OSC Client for sending messages.
 
 
 def vector_3d_magnitude(x, y, z):
@@ -40,9 +40,9 @@ def proc_imu(quat, acc, gyro):
     proc_acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
     proc_gyro = tuple(map(lambda x: x / GYROSCOPE_SCALE, gyro))
     # print("quat:", proc_quat, "acc:", proc_acc, "gyro:", proc_gyro, end='\r')
-    osc_client.send_message("/quat", proc_quat)
+    osc_client.send_message("/ori", proc_quat)
     osc_client.send_message("/acc", proc_acc)
-    osc_client.send_message("/gyro", proc_gyro)
+    osc_client.send_message("/gyr", proc_gyro)
     roll, pitch, yaw = toEulerAngle(proc_quat[0], proc_quat[1], proc_quat[2], proc_quat[3])
     osc_client.send_message("/euler", (roll / math.pi, pitch / math.pi, yaw / math.pi))  # vals sent in [-1,1] (not [-pi,pi])
     osc_client.send_message("/accmag", vector_3d_magnitude(proc_acc[0], proc_acc[1], proc_acc[2]))  # magnitude of accelerometer vector
@@ -74,10 +74,13 @@ m.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.di
 # Buzz to show Myo is ready.
 m.vibrate(1)
 
+def run_loop():
+    m.run()
+
 print("Now running...")
 try:
     while True:
-        m.run(1)
+        run_loop()
 except KeyboardInterrupt:
     pass
 finally:
@@ -85,10 +88,9 @@ finally:
     print("Disconnected")
 
 
-
-
 # TODO:
 #   - direct connection to a specific myo.
 #   - test out OSC sending
 #   - move classification if then to myohw.py
 #   - experiment connecting to multiple myos.
+#   - update to pyGatt rather than lame bluetooth backend.

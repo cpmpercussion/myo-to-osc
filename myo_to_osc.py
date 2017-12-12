@@ -61,7 +61,8 @@ def proc_battery(battery_level):
 
 
 # Setup Myo Connection
-m = MyoRaw(tty="/dev/tty.usbmodem1")
+m = MyoRaw(tty="/dev/tty.usbmodem1")  # MacOS
+# m = MyoRaw(tty="/dev/tty.ACM0")  # Linux
 m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)
 m.add_battery_handler(proc_battery)

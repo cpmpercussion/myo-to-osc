@@ -2,3 +2,5 @@
 *.pyc
 *.dat
 *.egg-info
+
+.ipynb_checkpoints/myo_tests-checkpoint.ipynb

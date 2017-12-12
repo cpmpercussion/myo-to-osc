@@ -1,65 +1,85 @@
-#N canvas -2455 276 909 497 10;
-#X obj 88 83 netreceive -u -b;
-#X obj 88 106 oscparse;
-#X obj 88 31 loadbang;
-#X obj 88 129 list trim;
-#X msg 88 55 listen 3000;
-#X obj 89 153 route quat acc gyr emg euler accmag gyrmag;
-#X floatatom 506 209 5 0 0 0 - - -, f 5;
-#X floatatom 454 209 5 0 0 0 - - -, f 5;
-#X obj 274 225 unpack f f f;
-#X floatatom 273 250 5 0 0 0 - - -, f 5;
-#X floatatom 319 250 5 0 0 0 - - -, f 5;
-#X floatatom 361 249 5 0 0 0 - - -, f 5;
-#X obj 273 271 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 5723 1;
-#X obj 313 271 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6195 1;
-#X obj 350 272 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6760 1;
-#X obj 61 187 unpack f f f;
-#X floatatom 60 212 5 0 0 0 - - -, f 5;
-#X floatatom 106 212 5 0 0 0 - - -, f 5;
-#X floatatom 148 211 5 0 0 0 - - -, f 5;
-#X obj 486 237 vsl 15 128 0 10 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 1267 1;
-#X obj 536 235 vsl 15 128 0 10 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 1446 1;
-#X obj 72 238 unpack f f f;
-#X floatatom 71 263 5 0 0 0 - - -, f 5;
-#X floatatom 117 263 5 0 0 0 - - -, f 5;
-#X floatatom 159 262 5 0 0 0 - - -, f 5;
-#X obj 626 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+#N canvas -2202 18 725 443 10;
+#X obj 18 53 netreceive -u -b;
+#X obj 18 76 oscparse;
+#X obj 18 1 loadbang;
+#X obj 18 99 list trim;
+#X msg 18 25 listen 3000;
+#X obj 26 123 route quat acc gyr emg euler accmag gyrmag;
+#X floatatom 419 253 5 0 0 0 - - -, f 5;
+#X floatatom 353 253 5 0 0 0 - - -, f 5;
+#X obj 199 230 unpack f f f;
+#X floatatom 198 255 5 0 0 0 - - -, f 5;
+#X floatatom 244 255 5 0 0 0 - - -, f 5;
+#X floatatom 285 256 5 0 0 0 - - -, f 5;
+#X obj 198 276 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 5937 1;
+#X obj 238 276 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 5986 1;
+#X obj 275 277 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 2971 1;
+#X obj 25 287 unpack f f f;
+#X floatatom 23 312 5 0 0 0 - - -, f 5;
+#X floatatom 69 312 5 0 0 0 - - -, f 5;
+#X floatatom 111 311 5 0 0 0 - - -, f 5;
+#X obj 353 275 vsl 15 128 0 10 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 1255 1;
+#X obj 419 273 vsl 15 128 0 10 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 12700 1;
-#X obj 648 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+#X obj 525 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 6550 1;
+#X obj 547 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 6100 1;
+#X obj 573 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 6350 1;
-#X obj 674 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+#X obj 532 252 unpack f f f f f f f f;
+#X obj 596 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 6100 1;
+#X obj 617 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 5950 1;
+#X obj 638 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 6350 1;
-#X obj 633 237 unpack f f f f f f f f;
-#X obj 697 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 0 1;
-#X obj 718 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 12700 1;
-#X obj 739 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 12700 1;
-#X obj 765 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 12700 1;
-#X obj 788 267 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6350 1;
-#X obj 142 418 print;
+#X obj 664 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 6800 1;
+#X obj 687 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
+-1 -1 5700 1;
+#X obj 412 137 print;
+#X obj 9 146 s ori;
+#X obj 52 147 s acc;
+#X obj 97 146 s gyr;
+#X obj 148 146 s emg;
+#X obj 192 146 s euler;
+#X obj 253 147 s accmag;
+#X obj 316 145 s gyrmag;
+#X obj 532 231 r emg;
+#X obj 353 231 r accmag;
+#X obj 419 231 r gyrmag;
+#X obj 199 208 r euler;
+#X obj 24 367 unpack f f f;
+#X floatatom 23 392 5 0 0 0 - - -, f 5;
+#X floatatom 69 392 5 0 0 0 - - -, f 5;
+#X floatatom 111 391 5 0 0 0 - - -, f 5;
+#X floatatom 22 247 5 0 0 0 - - -, f 5;
+#X floatatom 68 247 5 0 0 0 - - -, f 5;
+#X floatatom 109 247 5 0 0 0 - - -, f 5;
+#X obj 23 222 unpack f f f f;
+#X floatatom 149 247 5 0 0 0 - - -, f 5;
+#X obj 23 200 r ori;
+#X obj 24 265 r acc;
+#X obj 23 344 r gyr;
 #X connect 0 0 1 0;
 #X connect 1 0 3 0;
 #X connect 2 0 4 0;
 #X connect 3 0 5 0;
 #X connect 4 0 0 0;
-#X connect 5 1 15 0;
-#X connect 5 2 21 0;
-#X connect 5 3 28 0;
-#X connect 5 4 8 0;
-#X connect 5 5 7 0;
-#X connect 5 5 19 0;
-#X connect 5 6 6 0;
-#X connect 5 6 20 0;
+#X connect 5 0 31 0;
+#X connect 5 1 32 0;
+#X connect 5 2 33 0;
+#X connect 5 3 34 0;
+#X connect 5 4 35 0;
+#X connect 5 5 36 0;
+#X connect 5 6 37 0;
+#X connect 6 0 20 0;
+#X connect 7 0 19 0;
 #X connect 8 0 9 0;
 #X connect 8 0 12 0;
 #X connect 8 1 10 0;
@@ -69,14 +89,25 @@
 #X connect 15 0 16 0;
 #X connect 15 1 17 0;
 #X connect 15 2 18 0;
-#X connect 21 0 22 0;
-#X connect 21 1 23 0;
-#X connect 21 2 24 0;
-#X connect 28 0 25 0;
-#X connect 28 1 26 0;
-#X connect 28 2 27 0;
-#X connect 28 3 29 0;
-#X connect 28 4 30 0;
-#X connect 28 5 31 0;
-#X connect 28 6 32 0;
-#X connect 28 7 33 0;
+#X connect 24 0 21 0;
+#X connect 24 1 22 0;
+#X connect 24 2 23 0;
+#X connect 24 3 25 0;
+#X connect 24 4 26 0;
+#X connect 24 5 27 0;
+#X connect 24 6 28 0;
+#X connect 24 7 29 0;
+#X connect 38 0 24 0;
+#X connect 39 0 7 0;
+#X connect 40 0 6 0;
+#X connect 41 0 8 0;
+#X connect 42 0 43 0;
+#X connect 42 1 44 0;
+#X connect 42 2 45 0;
+#X connect 49 0 46 0;
+#X connect 49 1 47 0;
+#X connect 49 2 48 0;
+#X connect 49 3 50 0;
+#X connect 51 0 49 0;
+#X connect 52 0 15 0;
+#X connect 53 0 42 0;

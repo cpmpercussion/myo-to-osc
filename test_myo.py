@@ -1,7 +1,5 @@
-"""Small example OSC client
-
-This program sends 10 random values between 0.0 and 1.0 to the /filter address,
-waiting for 1 seconds between each value.
+"""Myo-to-OSC application.
+Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000
 """
 from myo_raw import *
 from pythonosc import osc_message_builder
@@ -50,3 +48,10 @@ except KeyboardInterrupt:
 finally:
     m.disconnect()
     print("Disconnected")
+
+
+# TODO:
+#   - direct connection to a specific myo.
+#   - test out OSC sending
+#   - move classification if then to myohw.py
+#   - experiment connecting to multiple myos.

@@ -88,17 +88,13 @@ class MyoRaw(object):
         print('firmware: %d.%d.%d.%d' % self.get_firmware())
 
         # Subscribe to services etc.
-        # enable IMU data
-        self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')
-        # enable on/off arm notifications
-        self.write_attr(MyoChars.ArmDescriptor.value, b'\x02\x00')
-        # enable EMG notifications
+        self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')  # enable IMU data
+        self.write_attr(MyoChars.ArmDescriptor.value, b'\x02\x00')  # enable on/off arm notifications
         self.write_attr(MyoChars.EmgData0Descriptor.value, b'\x01\x00')  # Suscribe to EmgData0Characteristic
         self.write_attr(MyoChars.EmgData1Descriptor.value, b'\x01\x00')  # Suscribe to EmgData1Characteristic
         self.write_attr(MyoChars.EmgData2Descriptor.value, b'\x01\x00')  # Suscribe to EmgData2Characteristic
         self.write_attr(MyoChars.EmgData3Descriptor.value, b'\x01\x00')  # Suscribe to EmgData3Characteristic
-        # enable battery notifications
-        self.write_attr(MyoChars.BatteryDescriptor.value, b'\x01\x10')
+        self.write_attr(MyoChars.BatteryDescriptor.value, b'\x01\x10')  # Subscribe to battery notifications
 
         # Add the handler function to the bluetooth connection.
         self.bt.add_handler(self.handle_ble_data)
@@ -147,42 +143,10 @@ class MyoRaw(object):
         if self.conn is not None:
             self.bt.disconnect(self.conn)
 
-    # def start_raw(self, filtered=False):
-    #     ''' To get raw EMG signals, we subscribe to the four EMG notification
-    #     characteristics by writing a 0x0100 command to the corresponding handles.
-    #     '''
-    #     if not filtered:
-    #         self.write_attr(MyoChars.EmgData0Descriptor.value, b'\x01\x00')  # Suscribe to EmgData0Characteristic
-    #         self.write_attr(MyoChars.EmgData1Descriptor.value, b'\x01\x00')  # Suscribe to EmgData1Characteristic
-    #         self.write_attr(MyoChars.EmgData2Descriptor.value, b'\x01\x00')  # Suscribe to EmgData2Characteristic
-    #         self.write_attr(MyoChars.EmgData3Descriptor.value, b'\x01\x00')  # Suscribe to EmgData3Characteristic
-    #     if not filtered:
-    #         # self.write_attr(MyoChars.CommandCharacteristic.value, b'\x01\x03\x02\x01\x01')
-    #         self.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
-
-    #     '''By writing a 0x0100 command to handle 0x28, some kind of "hidden" EMG
-    #     notification characteristic is activated. This characteristic is not
-    #     listed on the Myo services of the offical BLE specification from Thalmic
-    #     Labs. Also, in the second line where we tell the Myo to enable EMG and
-    #     IMU data streams and classifier events, the 0x01 command which corresponds
-    #     to the EMG mode is not listed on the myohw_emg_mode_t struct of the Myo
-    #     BLE specification.
-    #     These two lines, besides enabling the IMU and the classifier, enable the
-    #     transmission of a stream of low-pass filtered EMG signals from the eight
-    #     sensor pods of the Myo armband (the "hidden" mode I mentioned above).
-    #     Instead of getting the raw EMG signals, we get rectified and smoothed
-    #     signals, a measure of the amplitude of the EMG (which is useful to have
-    #     a measure of muscle strength, but are not as useful as a truly raw signal).
-    #     '''
-    #     if filtered:
-    #         command = command_set_mode(0x01, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
-    #         self.write_attr(MyoChars.EMGDescriptor.value, b'\x01\x00')  # Not needed for raw signals # What's this handle?
-    #         self.write_attr(MyoChars.CommandCharacteristic.value, command) # b'\x01\x03\x01\x01\x01'
-
     def get_name(self):
         """ Get the connected Myo's name. """
         name = self.read_attr(MyoChars.DeviceName.value)
-        name = name.payload[5:] # chop off the first 5 bytes? junk for some reason.
+        name = name.payload[5:]  # chop off the first 5 bytes? junk for some reason.
         name = name.decode("utf-8")
         return name
 

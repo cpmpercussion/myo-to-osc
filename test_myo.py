@@ -10,6 +10,31 @@ from pythonosc import udp_client
 osc_client = udp_client.SimpleUDPClient("localhost", 3000)
 
 
+def vector_3d_magnitude(x, y, z):
+    """Calculate the magnitude of a 3d vector"""
+    return math.sqrt((x * x) + (y * y) + (z * z))
+
+
+def toEulerAngle(w, x, y, z):
+    """ Quaternion to Euler angle conversion borrowed from wikipedia.
+        https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles """
+    # roll (x-axis rotation)
+    sinr = +2.0 * (w * x + y * z)
+    cosr = +1.0 - 2.0 * (x * x + y * y)
+    roll = math.atan2(sinr, cosr)
+    # pitch (y-axis rotation)
+    sinp = +2.0 * (w * y - z * x)
+    if (math.fabs(sinp) >= 1):
+        pitch = math.copysign(math.pi / 2, sinp)  # use 90 degrees if out of range
+    else:
+        pitch = math.asin(sinp)
+    # yaw (z-axis rotation)
+    siny = +2.0 * (w * z + x * y)
+    cosy = +1.0 - 2.0 * (y * y + z * z)
+    yaw = math.atan2(siny, cosy)
+    return roll, pitch, yaw
+
+
 def proc_imu(quat, acc, gyro):
     proc_quat = tuple(map(lambda x: x / ORIENTATION_SCALE, quat))
     proc_acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
@@ -27,7 +52,7 @@ def proc_imu(quat, acc, gyro):
 def proc_emg(emg_data):
     proc_emg = tuple(map(lambda x: x / 127.0, emg_data))  # scale EMG to be in [-1, 1]
     # print("emg:", em_data, end='\r')
-    osc_client.send_message("/emg", emg_data)
+    osc_client.send_message("/emg", proc_emg)
 
 
 def proc_battery(battery_level):
@@ -60,29 +85,7 @@ finally:
     print("Disconnected")
 
 
-def vector_3d_magnitude(x, y, z):
-    """Calculate the magnitude of a 3d vector"""
-    return math.sqrt((x * x) + (y * y) + (z * z))
 
-
-def toEulerAngle(w, x, y, z):
-    """ Quaternion to Euler angle conversion borrowed from wikipedia.
-        https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles """
-    # roll (x-axis rotation)
-    sinr = +2.0 * (w * x + y * z)
-    cosr = +1.0 - 2.0 * (x * x + y * y)
-    roll = math.atan2(sinr, cosr)
-    # pitch (y-axis rotation)
-    sinp = +2.0 * (w * y - z * x)
-    if (math.fabs(sinp) >= 1):
-        pitch = math.copysign(math.pi / 2, sinp)  # use 90 degrees if out of range
-    else:
-        pitch = math.asin(sinp)
-    # yaw (z-axis rotation)
-    siny = +2.0 * (w * z + x * y)
-    cosy = +1.0 - 2.0 * (y * y + z * z)
-    yaw = math.atan2(siny, cosy)
-    return roll, pitch, yaw
 
 # TODO:
 #   - direct connection to a specific myo.

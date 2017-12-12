@@ -10,6 +10,11 @@ import threading
 import time
 import serial
 
+BLE_RESPONSE_PKT = 0x00
+BLE_EVENT_PKT = 0x80
+WIFI_RESPONSE_PKT = 0x08
+WIFI_EVENT_PKT = 0x88
+
 
 class Packet(object):
     def __init__(self, ords):
@@ -26,8 +31,8 @@ class Packet(object):
 
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
-    def __init__(self, tty):
-        self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
+    def __init__(self, tty, baudrate=115200):
+        self.ser = serial.Serial(port=tty, baudrate=baudrate, dsrdtr=1)
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
@@ -45,7 +50,7 @@ class BT(object):
 
             ret = self.proc_byte(ord(c))
             if ret:
-                if ret.typ == 0x80:
+                if ret.typ == BLE_EVENT_PKT:
                     self.handle_event(ret)
                 return ret
 
@@ -61,7 +66,7 @@ class BT(object):
 
     def proc_byte(self, c):
         if not self.buf:
-            if c in [0x00, 0x80, 0x08, 0x88]:  # [BLE response pkt, BLE event pkt, wifi response pkt, wifi event pkt]
+            if c in [BLE_RESPONSE_PKT, BLE_EVENT_PKT, WIFI_RESPONSE_PKT, WIFI_EVENT_PKT]:  # [BLE response pkt, BLE event pkt, wifi response pkt, wifi event pkt]
                 self.buf.append(c)
             return None
         elif len(self.buf) == 1:

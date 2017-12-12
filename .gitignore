@@ -3,4 +3,4 @@
 *.dat
 *.egg-info
 
-.ipynb_checkpoints/myo_tests-checkpoint.ipynb
+.ipynb_checkpoints

@@ -1,7 +1,7 @@
 """Myo-to-OSC application.
 Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000
 """
-from myo_raw import *
+from myo import *
 import math
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
@@ -61,8 +61,8 @@ def proc_battery(battery_level):
 
 
 # Setup Myo Connection
-m = MyoRaw(tty="/dev/tty.usbmodem1")  # MacOS
-# m = MyoRaw(tty="/dev/tty.ACM0")  # Linux
+m = Myo(tty="/dev/tty.usbmodem1")  # MacOS
+# m = Myo(tty="/dev/ttyACM0")  # Linux
 m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)
 m.add_battery_handler(proc_battery)
@@ -91,7 +91,6 @@ finally:
 
 # TODO:
 #   - direct connection to a specific myo.
-#   - test out OSC sending
 #   - move classification if then to myohw.py
 #   - experiment connecting to multiple myos.
 #   - update to pyGatt rather than lame bluetooth backend.

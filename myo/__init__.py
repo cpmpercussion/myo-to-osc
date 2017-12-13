@@ -14,8 +14,9 @@ from .bluetooth import BT
 from .myohw import *
 
 
-class MyoRaw(object):
-    '''Implements the Myo-specific communication protocol.'''
+class Myo(object):
+    '''Manages a connection with a Myo dongle, handles receiving messages,
+    sending to handler functions, and sending configuration.'''
 
     def __init__(self, tty=None):
         if tty is None:

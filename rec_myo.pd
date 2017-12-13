@@ -1,4 +1,4 @@
-#N canvas -2403 29 725 443 10;
+#N canvas -2337 -62 725 443 10;
 #X obj 18 53 netreceive -u -b;
 #X obj 18 76 oscparse;
 #X obj 18 1 loadbang;
@@ -11,36 +11,36 @@
 #X floatatom 244 255 5 0 0 0 - - -, f 5;
 #X floatatom 285 256 5 0 0 0 - - -, f 5;
 #X obj 198 276 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6019 1;
+-1 -1 5944 1;
 #X obj 238 276 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 5985 1;
+-1 -1 6114 1;
 #X obj 275 277 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6986 1;
+-1 -1 5018 1;
 #X obj 25 287 unpack f f f;
 #X floatatom 23 312 5 0 0 0 - - -, f 5;
 #X floatatom 69 312 5 0 0 0 - - -, f 5;
 #X floatatom 111 311 5 0 0 0 - - -, f 5;
 #X obj 353 275 vsl 15 128 0 10 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 1261 1;
+-1 -1 1220 1;
 #X obj 419 273 vsl 15 128 0 360 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 360 1;
+-1 -1 477 1;
 #X obj 525 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 6200 1;
 #X obj 547 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6350 1;
+-1 -1 5850 1;
 #X obj 573 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6450 1;
+-1 -1 5500 1;
 #X obj 532 252 unpack f f f f f f f f;
 #X obj 596 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6500 1;
+-1 -1 6150 1;
 #X obj 617 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6250 1;
+-1 -1 5700 1;
 #X obj 638 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 5850 1;
+-1 -1 5000 1;
 #X obj 664 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6050 1;
+-1 -1 5700 1;
 #X obj 687 282 vsl 15 128 -1 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 6400 1;
+-1 -1 6200 1;
 #X obj 9 146 s ori;
 #X obj 52 147 s acc;
 #X obj 97 146 s gyr;

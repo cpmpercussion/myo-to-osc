@@ -37,7 +37,6 @@ class MyoChars(Enum):
     EmgData2Descriptor = 0x32
     EmgData3Descriptor = 0x35
 
-
 MYO_EMG_CHARACTERISTICS = [MyoChars.EmgData0Characteristic.value,
                            MyoChars.EmgData1Characteristic.value,
                            MyoChars.EmgData2Characteristic.value,
@@ -56,13 +55,19 @@ MyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', *MYO_SERVICE_INFO_UUID)
 num_emg_sensors = 8
 
 # myo_hardware Myo Hardware Data Structures
-# These types and enumerations describe the format of data sent to and from a Myo device using Bluetooth Low Energy.
+# These types and enumerations describe the format of data sent to and from a
+# Myo device using Bluetooth Low Energy.
 # All values are big-endian.
 
-# The following enum lists the 16bit short UUIDs of Myo services and characteristics. To construct a full 128bit
-# UUID, replace the two 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from standard_services.
-# The byte sequence of MYO_SERVICE_BASE_UUID is in network order. Keep this in mind when doing the replacement.
-# For example, the full service UUID for Services.ControlService would be d5060001-a904-deb9-4748-2c7f4a124842.
+# The following enum lists the 16bit short UUIDs of Myo services and
+# characteristics. To construct a full 128bit UUID, replace the two
+# 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from
+# standard_services.
+# The byte sequence of MYO_SERVICE_BASE_UUID is in network order.
+# Keep this in mind when doing the replacement.
+# For example, the full service UUID for Services.ControlService
+# would be d5060001-a904-deb9-4748-2c7f4a124842.
+
 MYO_SERVICE_BASE_UUID = [
     0x42, 0x48, 0x12, 0x4a,
     0x7f, 0x2c, 0x48, 0x47,

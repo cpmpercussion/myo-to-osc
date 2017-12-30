@@ -87,10 +87,14 @@ STANDARD_UUID = [
     0x5f, 0x9b, 0x34, 0xfb
 ]
 
-def make_characteristic_uuid(short_uuid):
+def myo_uuid(short_uuid):
     """Inserts a short (16-bit) UUID into a MYO_SERVICE_BASE_UUID, 
     returns in string form for pyGATT library."""
     return str(uuid.UUID(bytes=pack('>2BH12B', *MYO_UUID[:2], short_uuid, *MYO_UUID[4:16])))
+
+
+def standard_uuid(short_uuid):
+    return str(uuid.UUID(bytes=pack('>2BH12B', *STANDARD_UUID[:2], short_uuid, *STANDARD_UUID[4:16])))
 
 
 class Services(Enum):

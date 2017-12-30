@@ -7,7 +7,7 @@ Python version 2017.
 
 from enum import Enum
 from struct import pack, unpack
-
+import uuid
 
 # Characteristic handles from MyoLinux
 class MyoChars(Enum):
@@ -49,7 +49,7 @@ MYO_SERVICE_INFO_UUID = [
     0xb9, 0xde, 0x04, 0xa9,
     0x01, 0x00, 0x06, 0xd5]
 
-MyoServiceInfoUuid = pack('BBBBBBBBBBBBBBBB', *MYO_SERVICE_INFO_UUID)
+MyoServiceInfoUuid = pack('16B', *MYO_SERVICE_INFO_UUID)
 
 # The number of EMG sensors that a Myo has.
 num_emg_sensors = 8
@@ -73,6 +73,18 @@ MYO_SERVICE_BASE_UUID = [
     0x7f, 0x2c, 0x48, 0x47,
     0xb9, 0xde, 0x04, 0xa9,
     0x00, 0x00, 0x06, 0xd5]
+
+MYO_UUID = [
+    0xd5, 0x06, 0x00, 0x00,
+    0xa9, 0x04, 0xde, 0xb9,
+    0x47, 0x48, 0x2c, 0x7f,
+    0x4a, 0x12, 0x48, 0x42]
+
+
+def make_characteristic_uuid(short_uuid):
+    """Inserts a short (16-bit) UUID into a MYO_SERVICE_BASE_UUID, 
+    returns in string form for pyGATT library."""
+    return str(uuid.UUID(bytes=pack('>2BH12B', *MYO_UUID[:2], short_uuid, *MYO_UUID[4:16])))
 
 
 class Services(Enum):

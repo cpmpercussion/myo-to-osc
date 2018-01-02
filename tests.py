@@ -21,7 +21,6 @@ def accept_emg_data(handle, value):
     emg1, emg2 = emg_data(value)
     print("EMG:", emg1, end='\r')
 
-
 address = 'C8:2F:84:E5:88:AF'
 adapter = pygatt.BGAPIBackend()
 adapter.start()

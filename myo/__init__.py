@@ -14,9 +14,8 @@ from .myohw import *
 class Myo(object):
     '''Manages a connection with a Myo dongle.'''
 
-    def __init__(self):
-        self.adapter = pygatt.BGAPIBackend()
-        self.adapter.start()
+    def __init__(self, adapter):
+        self.adapter = adapter
         self.device = None
         self.emg_handlers = []
         self.imu_handlers = []
@@ -24,16 +23,14 @@ class Myo(object):
         self.pose_handlers = []
         self.battery_handlers = []
 
-    def connect(self, address=None):
+    def connect(self, address):
         """ Connects to a Myo specified by MAC address,
         or scans for a Myo if no address is given."""
         # stop scanning and disconnect bluetooth as needed.
-
         self.device = self.adapter.connect(address)
         # Print out some Myo details.
         print('name:', self.get_name())
         print('firmware: %d.%d.%d.%d' % self.get_firmware())
-
         # Subscribe to services etc.
         self.device.subscribe(myo_uuid(Services.IMUDataCharacteristic.value), callback=self.accept_imu_data)
         self.device.subscribe(myo_uuid(Services.MotionEventCharacteristic.value), callback=self.accept_motion_data)
@@ -41,6 +38,10 @@ class Myo(object):
         self.device.subscribe(myo_uuid(Services.EmgData1Characteristic.value), callback=self.accept_emg_data)
         self.device.subscribe(myo_uuid(Services.EmgData2Characteristic.value), callback=self.accept_emg_data)
         self.device.subscribe(myo_uuid(Services.EmgData3Characteristic.value), callback=self.accept_emg_data)
+
+    def disconnect(self):
+        """ Disconnects the device. """
+        self.device.disconnect()
 
     def accept_imu_data(self, handle, value):
         quat, acc, gyro = imu_data(value)

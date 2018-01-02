@@ -1,13 +1,12 @@
 """Myo-to-OSC application.
-Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000
+Connects to a Myo, then sends EMG and IMU data
+as OSC messages to localhost:3000.
 """
+
 from myo import *
 import math
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
-
-
-osc_client = udp_client.SimpleUDPClient("localhost", 3000)  # OSC Client for sending messages.
 
 
 def vector_3d_magnitude(x, y, z):
@@ -51,42 +50,38 @@ def proc_imu(quat, acc, gyro):
 
 def proc_emg(emg_data):
     proc_emg = tuple(map(lambda x: x / 127.0, emg_data))  # scale EMG to be in [-1, 1]
-    # print("emg:", em_data, end='\r')
     osc_client.send_message("/emg", proc_emg)
 
-
-def proc_battery(battery_level):
-    # print("Battery", battery_level, end='\r')
-    osc_client.send_message("/battery", battery_level)
-
-
-# Setup Myo Connection
-m = Myo(tty="/dev/tty.usbmodem1")  # MacOS
-# m = Myo(tty="/dev/ttyACM0")  # Linux
-m.add_emg_handler(proc_emg)
-m.add_imu_handler(proc_imu)
-m.add_battery_handler(proc_battery)
-m.connect()  # connects to first Myo seen.
-
+# Setup OSC Client
+osc_client = udp_client.SimpleUDPClient("localhost", 3000)
+# Known Myo MAC Address.
+address = 'C8:2F:84:E5:88:AF'  # Bluetooth Address
+# Start the Bluetooth Adapter - this is for the Myo USB adapter.
+adapter = pygatt.BGAPIBackend()
+adapter.start()
+# Load the Myo interface
+dev = Myo(adapter)
+# Add some handler functions.
+dev.add_emg_handler(proc_emg)
+dev.add_imu_handler(proc_imu)
+# Connect to the known myo.
+dev.connect(address)
 # Setup Myo mode, buzzes when ready.
-m.sleep_mode(Sleep_Mode.never_sleep.value)
+dev.sleep_mode(Sleep_Mode.never_sleep.value)
 # EMG and IMU are enabled, classifier is disabled (thus, no sync gestures required, less annoying buzzing).
-m.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.disabled.value)
+dev.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.disabled.value)
 # Buzz to show Myo is ready.
-m.vibrate(1)
-
-def run_loop():
-    m.run()
+dev.vibrate(1)
 
 print("Now running...")
 try:
     while True:
-        run_loop()
 except KeyboardInterrupt:
     pass
 finally:
-    m.disconnect()
-    print("Disconnected")
+    dev.disconnect()
+    adapter.stop()
+    print("Disconnected, bye!")
 
 
 # TODO:

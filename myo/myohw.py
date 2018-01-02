@@ -1,7 +1,8 @@
 """
 Myo Hardware Bluetooth Specification from thalmic labs.
 Following: https://github.com/thalmiclabs/myo-bluetooth/
-The API is Copyright (c) 2015, Thalmic Labs Inc, originally released under a. BSD 3-clause "New" or "Revised" License
+The API is Copyright (c) 2015, Thalmic Labs Inc, originally
+released under a. BSD 3-clause "New" or "Revised" License
 Python version 2017.
 """
 
@@ -9,9 +10,10 @@ from enum import Enum
 from struct import pack, unpack
 import uuid
 
-# Characteristic handles from MyoLinux
+
 class MyoChars(Enum):
-    """Handles for Bluetooth Characteristics for the Myo. Borrowed from MyoLinux."""
+    """Handles for Bluetooth Characteristics for the Myo.
+    Borrowed from MyoLinux."""
     # ControlService
     MyoInfoCharacteristic = 0x00
     DeviceName = 0x03
@@ -54,20 +56,6 @@ MyoServiceInfoUuid = pack('16B', *MYO_SERVICE_INFO_UUID)
 # The number of EMG sensors that a Myo has.
 num_emg_sensors = 8
 
-# myo_hardware Myo Hardware Data Structures
-# These types and enumerations describe the format of data sent to and from a
-# Myo device using Bluetooth Low Energy.
-# All values are big-endian.
-
-# The following enum lists the 16bit short UUIDs of Myo services and
-# characteristics. To construct a full 128bit UUID, replace the two
-# 0x00 hex bytes of MYO_SERVICE_BASE_UUID with a short UUID from
-# standard_services.
-# The byte sequence of MYO_SERVICE_BASE_UUID is in network order.
-# Keep this in mind when doing the replacement.
-# For example, the full service UUID for Services.ControlService
-# would be d5060001-a904-deb9-4748-2c7f4a124842.
-
 MYO_SERVICE_BASE_UUID = [
     0x42, 0x48, 0x12, 0x4a,
     0x7f, 0x2c, 0x48, 0x47,
@@ -88,7 +76,7 @@ STANDARD_UUID = [
 ]
 
 def myo_uuid(short_uuid):
-    """Inserts a short (16-bit) UUID into a MYO_SERVICE_BASE_UUID, 
+    """Inserts a short (16-bit) UUID into a MYO_SERVICE_BASE_UUID,
     returns in string form for pyGATT library."""
     return str(uuid.UUID(bytes=pack('>2BH12B', *MYO_UUID[:2], short_uuid, *MYO_UUID[4:16])))
 
@@ -143,7 +131,9 @@ def fw_info(data):
     """ Various parameters that may affect the behaviour of this Myo armband.
     The Myo library reads this attribute when a connection is established.
     Value layout for the att_handle_fw_info attribute. """
-    serial_number, unlock_pose, active_classifier_type, active_classifier_index, has_custom_classifier, stream_indicating, sku, reserved = unpack('BBBBBBHBBBBBB', data)
+    serial_number, unlock_pose, active_classifier_type,
+    active_classifier_index, has_custom_classifier,
+    stream_indicating, sku, reserved = unpack('BBBBBBHBBBBBB', data)
     return {
         "serial_number": serial_number,  # Unique serial number of this Myo.
         "unlock_pose": unlock_pose,  # Pose that should be interpreted as the unlock pose. See pose_t.
@@ -155,18 +145,6 @@ def fw_info(data):
         "sku": sku,  # SKU value of the device. See Sku.
         "reserved": reserved  # Reserved for future use; populated with zeros.
     }
-# {
-#     uint8_t serial_number[6];        ///< Unique serial number of this Myo.
-#     uint16_t unlock_pose;            ///< Pose that should be interpreted as the unlock pose. See pose_t.
-#     uint8_t active_classifier_type;  ///< Whether Myo is currently using a built-in or a custom classifier.
-#                                      ///< See classifier_model_type_t.
-#     uint8_t active_classifier_index; ///< Index of the classifier that is currently active.
-#     uint8_t has_custom_classifier;   ///< Whether Myo contains a valid custom classifier. 1 if it does, otherwise 0.
-#     uint8_t stream_indicating;       ///< Set if the Myo uses BLE indicates to stream data, for reliable capture.
-#     uint8_t sku;                     ///< SKU value of the device. See Sku.
-#     uint8_t reserved[7];             ///< Reserved for future use; populated with zeros.
-# } fw_info_t;
-# STATIC_ASSERT_SIZED(fw_info_t, 20);
 
 
 class Sku(Enum):
@@ -195,9 +173,6 @@ def fw_version(data):
 
 FIRMWARE_VERSION_MAJOR = 1
 FIRMWARE_VERSION_MINOR = 2
-
-
-# control_commands Control Commands
 
 
 class Command(Enum):
@@ -268,25 +243,6 @@ def command_vibrate(type):
 def command_deep_sleep():
     """ Deep sleep command. """
     return command_header(Command.deep_sleep.value, 0)  # command == command_deep_sleep. payload_size == 0.
-
-
-# TODO: Fix this second vibrate command.
-# def command_vibrate2(duration, strength):
-#     """ Extended vibration command. """
-#     COMMAND_VIBRATE2_STEPS = 6
-#     header = command_header(Command.vibrate2.value, 18)  # command == command_vibrate2. payload_size == 18.
-#     steps = pack('HB', 
-#         duration,  # duration (in ms) of the vibration
-#         strength)  # strength of vibration (0 - motor off, 255 - full speed)
-#     # TODO: this is wrong, the steps bit doesn't work.
-#     return
-# #     command_header_t header;
-# #     struct PACKED {
-# #         uint16_t duration;
-# #         uint8_t strength;
-# #     } steps[COMMAND_VIBRATE2_STEPS];
-# # } command_vibrate2_t;
-# # STATIC_ASSERT_SIZED(command_vibrate2_t, 20);
 
 
 class Sleep_Mode(Enum):
@@ -398,26 +354,11 @@ class Sync_Result(Enum):
 
 
 def classifier_event(data):
-    """" Classifier event data received in a att_handle_classifier_event attribute. """
-    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)  # only first three bytes are in spec, what's with the second three?
+    """" Classifier event data received in a 
+    att_handle_classifier_event attribute. """
+    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)  
     return cla_type, event_value, x_direction
-#     uint8_t type; ///< See classifier_event_type_t
-#     /// Event-specific data
-#     union PACKED {
-#         /// For classifier_event_arm_synced events.
-#         struct PACKED {
-#             uint8_t arm; ///< See arm_t
-#             uint8_t x_direction; ///< See x_direction_t
-#         };
 
-#         /// For classifier_event_pose events.
-#         uint16_t pose; ///< See pose_t
-
-#         /// For classifier_event_sync_failed events.
-#         uint8_t sync_result; ///< See sync_result_t.
-#     };
-# } classifier_event_t;
-# STATIC_ASSERT_SIZED(classifier_event_t, 3);
 
 # The rate that EMG events are streamed over Bluetooth.
 EMG_DEFAULT_STREAMING_RATE = 200

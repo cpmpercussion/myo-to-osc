@@ -1,17 +1,15 @@
-#
-# Original work Copyright (c) 2014 Danny Zhu
-# Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
-# More modications by Charles P. Martin, 2017.
+# Myo Bluetooth Library
+# Charles P. Martin, 2017.
+# Thanks to Danny Zhu, Alvaro Villoslada, and Fernando Cosentino
 #
 # Licensed under the MIT license. See the LICENSE file for details.
 #
-import struct
+
 import pygatt
 from binascii import hexlify
 from .myohw import *
 
-address = 'C8:2F:84:E5:88:AF'
-
+# address = 'C8:2F:84:E5:88:AF'
 
 class Myo(object):
     '''Manages a connection with a Myo dongle.'''
@@ -27,7 +25,8 @@ class Myo(object):
         self.battery_handlers = []
 
     def connect(self, address=None):
-        """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. """
+        """ Connects to a Myo specified by MAC address,
+        or scans for a Myo if no address is given."""
         # stop scanning and disconnect bluetooth as needed.
 
         self.device = self.adapter.connect(address)
@@ -45,21 +44,26 @@ class Myo(object):
 
     def accept_imu_data(self, handle, value):
         quat, acc, gyro = imu_data(value)
-        self.on_imu(quat, acc, gyro)
+        for handler in self.imu_handlers:
+            handler(quat, acc, gyro)
 
     def accept_motion_data(self, handle, value):
         typ, val, xdir = classifier_event(value)
         if typ == Classifier_Event_Type.arm_synced.value:  # on arm
-            self.on_arm(Arm(val), X_Direction(xdir))
+            for handler in self.arm_handlers:
+                handler(Arm(val), X_Direction(xdir))
         elif typ == Classifier_Event_Type.arm_unsynced.value:  # removed from arm
-            self.on_arm(Arm.unknown, X_Direction.unknown)
+            for handler in self.arm_handlers:
+                handler(Arm.unknown, X_Direction.unknown)
         elif typ == Classifier_Event_Type.pose.value:  # pose
-            self.on_pose(Pose(val))
+            for handler in self.pose_handlers:
+                handler(Pose(val))
 
     def accept_emg_data(self, handle, value):
         emg1, emg2 = emg_data(value)
-        self.on_emg(emg1)
-        self.on_emg(emg2)
+        for handler in self.emg_handlers:
+            handler(emg1)
+            handler(emg2)
 
     def disconnect(self):
         self.device.disconnect()
@@ -88,14 +92,10 @@ class Myo(object):
         """ Put the Myo into deep sleep mode. (Needs power cable to wake up)."""
         self.device.char_write(myo_uuid(Services.CommandCharacteristic.value), command_deep_sleep())
 
-    def vibrate(self, type):
+    def vibrate(self, typ):
         """ Send a vibrate command to the Myo, see Vibration_Type for the kinds of vibrations. """
         if type in range(1, 4):
-            self.device.char_write(myo_uuid(Services.CommandCharacteristic.value), command_vibrate(type))
-
-    # Remove this (private) command.
-    # def set_leds(self, logo, line):
-    #     self.write_attr(MyoChars.CommandCharacteristic.value, struct.pack('<8B', 6, 6, *(logo + line)))
+            self.device.char_write(myo_uuid(Services.CommandCharacteristic.value), command_vibrate(typ))
 
     def add_emg_handler(self, h):
         """ Add a handler function for EMG signals. Signature: function(emg). """
@@ -112,19 +112,3 @@ class Myo(object):
     def add_arm_handler(self, h):
         """ Add a handler for arm signals. Signature: function(arm, x_direction). """
         self.arm_handlers.append(h)
-
-    def on_emg(self, emg):
-        for h in self.emg_handlers:
-            h(emg)
-
-    def on_imu(self, quat, acc, gyro):
-        for h in self.imu_handlers:
-            h(quat, acc, gyro)
-
-    def on_pose(self, p):
-        for h in self.pose_handlers:
-            h(p)
-
-    def on_arm(self, arm, xdir):
-        for h in self.arm_handlers:
-            h(arm, xdir)

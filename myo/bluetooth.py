@@ -1,7 +1,7 @@
 #
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
-# 
+#
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
@@ -37,32 +37,17 @@ class BT(object):
         self.lock = threading.Lock()
         self.handlers = []
 
-    # internal data-handling methods
     def recv_packet(self, timeout=None):
-        t0 = time.time()
         self.ser.timeout = None
-        while timeout is None or time.time() < t0 + timeout:
-            if timeout is not None:
-                self.ser.timeout = t0 + timeout - time.time()
+        while True:  # note that this could block if a packet is never received.
             c = self.ser.read()
             if not c:
                 return None
-
             ret = self.proc_byte(ord(c))
             if ret:
                 if ret.typ == BLE_EVENT_PKT:
                     self.handle_event(ret)
                 return ret
-
-    def recv_packets(self, timeout=.5):
-        res = []
-        t0 = time.time()
-        while time.time() < t0 + timeout:
-            p = self.recv_packet(t0 + timeout - time.time())
-            if not p:
-                return res
-            res.append(p)
-        return res
 
     def proc_byte(self, c):
         if not self.buf:

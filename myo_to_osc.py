@@ -7,6 +7,7 @@ from myo import *
 import math
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
+import pygatt
 
 
 def vector_3d_magnitude(x, y, z):
@@ -59,6 +60,7 @@ address = 'C8:2F:84:E5:88:AF'  # Bluetooth Address
 # Start the Bluetooth Adapter - this is for the Myo USB adapter.
 adapter = pygatt.BGAPIBackend()
 adapter.start()
+adapter._ser.timeout = 0
 # Load the Myo interface
 dev = Myo(adapter)
 # Add some handler functions.
@@ -70,19 +72,21 @@ dev.connect(address)
 dev.sleep_mode(Sleep_Mode.never_sleep.value)
 # EMG and IMU are enabled, classifier is disabled (thus, no sync gestures required, less annoying buzzing).
 dev.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.disabled.value)
+#dev.set_mode(EMG_Mode.send_emg_raw.value, IMU_Mode.send_data.value, Classifier_Mode.disabled.value)
+
 # Buzz to show Myo is ready.
 dev.vibrate(1)
 
 print("Now running...")
 try:
     while True:
+        pass
 except KeyboardInterrupt:
     pass
 finally:
     dev.disconnect()
     adapter.stop()
     print("Disconnected, bye!")
-
 
 # TODO:
 #   - direct connection to a specific myo.

@@ -356,7 +356,7 @@ class Sync_Result(Enum):
 def classifier_event(data):
     """" Classifier event data received in a 
     att_handle_classifier_event attribute. """
-    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)  
+    cla_type, event_value, x_direction, _, _, _ = unpack('<6B', data)
     return cla_type, event_value, x_direction
 
 

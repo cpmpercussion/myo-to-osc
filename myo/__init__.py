@@ -22,6 +22,8 @@ class Myo(object):
         self.arm_handlers = []
         self.pose_handlers = []
         self.battery_handlers = []
+        self.name = None
+        self.firmware = None
 
     def connect(self, address):
         """ Connects to a Myo specified by MAC address,
@@ -29,8 +31,10 @@ class Myo(object):
         # stop scanning and disconnect bluetooth as needed.
         self.device = self.adapter.connect(address)
         # Print out some Myo details.
-        print('name:', self.get_name())
-        print('firmware: %d.%d.%d.%d' % self.get_firmware())
+        self.name = self.get_name()
+        self.firmware = self.get_firmware()
+        print('name:', self.name)
+        print('firmware: %d.%d.%d.%d' % self.firmware)
         # Subscribe to services etc.
         self.device.subscribe(myo_uuid(Services.IMUDataCharacteristic.value), callback=self.accept_imu_data)
         self.device.subscribe(myo_uuid(Services.MotionEventCharacteristic.value), callback=self.accept_motion_data)

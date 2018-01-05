@@ -154,9 +154,8 @@ class Myo(object):
     def get_firmware(self):
         """ Get the connected Myo's firmware version. """
         fw = self.read_attr(MyoChars.FirmwareVersionCharacteristic.value)
-        # get firmware version.
-        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
-        return v0, v1, v2, v3
+        fw = fw.payload[5:]  # chop off the first 5 bytes? Junk for some reason.
+        return fw_version(fw)
 
     def set_mode(self, emg_mode, imu_mode, cla_mode):
         """ Set the EMG, IMU and Classifier modes as described in myohw.py """
@@ -201,21 +200,31 @@ class Myo(object):
         self.battery_handlers.append(h)
 
     def on_emg(self, emg):
+        """ Sends EMG data on to any registered handler function.
+        Note that each EMG reading is an int in [-127, 127]."""
         for h in self.emg_handlers:
             h(emg)
 
     def on_imu(self, quat, acc, gyro):
+        """Scales the IMU data according to the myohw constants and sends it on to
+        any registered handler function."""
+        proc_quat = tuple(map(lambda x: x / ORIENTATION_SCALE, quat))
+        proc_acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
+        proc_gyro = tuple(map(lambda x: x / GYROSCOPE_SCALE, gyro))
         for h in self.imu_handlers:
-            h(quat, acc, gyro)
+            h(proc_quat, proc_acc, proc_gyro)
 
     def on_pose(self, p):
+        """ Sends pose data on to any registered handler function. """
         for h in self.pose_handlers:
             h(p)
 
     def on_arm(self, arm, xdir):
+        """ Sends arm recognition data on to any registered handler function. """
         for h in self.arm_handlers:
             h(arm, xdir)
 
     def on_battery(self, battery_level):
+        """ Sends battery level on to any registered handler function. """
         for h in self.battery_handlers:
             h(battery_level)

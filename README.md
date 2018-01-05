@@ -42,6 +42,16 @@ Then perform the sync gesture as described by [Myo Support](https://support.getm
 > in Myo Connect. Once Myo is fully warmed up and synced, you will feel three
 > distinct vibrations.
 
+# About the Myo Bluetooth dongle
+
+The Myo Bluetooth dongle provides a simple serial interface to Bluetooth LE devices, thus the code here can be relatively simple and cross-platform. There are Python libraries for native OS-specific Bluetooth LE connections, but I haven't found one that works better or as well as the present solution.
+
+There's a working version of this repo using the [`pyGatt`](https://github.com/peplin/pygatt) library that can also use the dongle on any platform and other Bluetooth adapters under Linux (see the [pygatt-version branch](https://github.com/cpmpercussion/myo-to-osc/tree/pygatt-version)), but I found the performance to be too bad to use.
+
+Another possibility would be to use the [Adafruit Python BluetoothLE library](https://github.com/adafruit/Adafruit_Python_BluefruitLE), which could work under Linux and MacOS but not Windows.
+
+TL;DR: This library requires the Myo Bluetooth dongle for good reasons.
+
 # Acknowledgements
 
 Thanks to the original authors of the `myo_raw` library, and later contributions that served as a starting point for this project: Danny Zhu, Alvaro Villoslada, Fernando Cosentino.

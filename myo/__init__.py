@@ -87,6 +87,7 @@ class Myo(object):
 
         # connect and wait for status event
         conn_pkt = self.bt.connect(address)
+        print(conn_pkt)
         self.conn = list(conn_pkt.payload)[-1]
         self.bt.wait_event(3, 0)  # TODO: figure out this line.
         # Print out some Myo details.
@@ -205,7 +206,7 @@ class Myo(object):
             h(emg1)
             h(emg2)
 
-    def on_imu(imu_input_data):
+    def on_imu(self, imu_input_data):
         """Parses and scales the IMU data according to the myohw constants and sends it on to
         any registered handler function."""
         quat, acc, gyro = imu_data(imu_input_data)

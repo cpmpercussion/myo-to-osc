@@ -57,7 +57,8 @@ def proc_battery(battery_level):
 
 
 # Setup Myo Connection
-m = Myo(tty="/dev/tty.usbmodem1")  # MacOS
+m = Myo()  # scan for USB bluetooth adapter and start the serial connection automatically
+# m = Myo(tty="/dev/tty.usbmodem1")  # MacOS
 # m = Myo(tty="/dev/ttyACM0")  # Linux
 m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)

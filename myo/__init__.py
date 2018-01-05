@@ -39,7 +39,13 @@ class Myo(object):
     '''Manages a connection with a Myo dongle, handles receiving messages,
     sending to handler functions, and sending configuration.'''
 
-    def __init__(self, tty=None):
+    def __init__(self, adapter=None, tty=None):
+        """ Initialise a Myo handler.
+
+        Keyword arguments:
+        adapter -- A BT object connected to a USB Bluetooth dongle.
+        tty -- A serial port connected to a USB Bluetooth dongle.
+        """
         self.conn = None
         self.emg_handlers = []
         self.imu_handlers = []
@@ -48,15 +54,23 @@ class Myo(object):
         self.battery_handlers = []
         self.name = None
         self.firmware = None
-        self.bt = BT(tty, baudrate=115200)
-
+        if adapter is None:
+            self.bt = BT(tty, baudrate=115200)
+        else:
+            self.bt = adapter
 
     def run(self):
-        """ Receive BLE packets """
+        """ Receive BLE packets. Run this command in a loop to receive data. """
         self.bt.recv_packet()
 
     def connect(self, address=None):
-        """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. """
+        """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. 
+
+        Keyword arguments:
+        address -- a Myo's MAC address string in "xx:xx:xx:xx:xx:xx" format.
+
+        If no address is given, scans and connects to first responding Myo.
+        """
         # stop scanning and disconnect bluetooth as needed.
         self.bt.end_scan()
         self.bt.disconnect(0)
@@ -102,26 +116,16 @@ class Myo(object):
         pay = p.payload[5:] # chop off the first five bytes of the payload for some reason.
         # Read notification handles corresponding to the for EMG characteristics
         if attr in MYO_EMG_CHARACTERISTICS:
-            emg1, emg2 = emg_data(pay)
-            self.on_emg(emg1)
-            self.on_emg(emg2)
+            self.on_emg(pay)
         # Read IMU characteristic handle
         elif attr == MyoChars.IMUDataCharacteristic.value:
-            quat, acc, gyro = imu_data(pay)
-            self.on_imu(quat, acc, gyro)
+            self.on_imu(pay)
         # Read classifier characteristic handle
         elif attr == MyoChars.ClassifierCharacteristic.value:
-            typ, val, xdir = classifier_event(pay)
-            if typ == Classifier_Event_Type.arm_synced.value:  # on arm
-                self.on_arm(Arm(val), X_Direction(xdir))
-            elif typ == Classifier_Event_Type.arm_unsynced.value:  # removed from arm
-                self.on_arm(Arm.unknown, X_Direction.unknown)
-            elif typ == Classifier_Event_Type.pose.value:  # pose
-                self.on_pose(Pose(val))
+            self.on_gesture(pay)
         # Read battery characteristic handle
         elif attr == MyoChars.BatteryCharacteristic.value:
-            battery_level = ord(pay)
-            self.on_battery(battery_level)
+            self.on_battery(pay)
         else:
             print('data with unknown attr: %02X %s' % (attr, p))
 
@@ -193,32 +197,46 @@ class Myo(object):
         """ Add a handler for battery signals. Signature: function(battery_level). """
         self.battery_handlers.append(h)
 
-    def on_emg(self, emg):
+    def on_emg(self, emg_input_data):
         """ Sends EMG data on to any registered handler function.
         Note that each EMG reading is an int in [-127, 127]."""
+        emg1, emg2 = emg_data(emg_input_data)
         for h in self.emg_handlers:
-            h(emg)
+            h(emg1)
+            h(emg2)
 
-    def on_imu(self, quat, acc, gyro):
-        """Scales the IMU data according to the myohw constants and sends it on to
+    def on_imu(imu_input_data):
+        """Parses and scales the IMU data according to the myohw constants and sends it on to
         any registered handler function."""
-        proc_quat = tuple(map(lambda x: x / ORIENTATION_SCALE, quat))
-        proc_acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
-        proc_gyro = tuple(map(lambda x: x / GYROSCOPE_SCALE, gyro))
+        quat, acc, gyro = imu_data(imu_input_data)
+        quat = tuple(map(lambda x: x / ORIENTATION_SCALE, quat))
+        acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
+        gyro = tuple(map(lambda x: x / GYROSCOPE_SCALE, gyro))
         for h in self.imu_handlers:
-            h(proc_quat, proc_acc, proc_gyro)
+            h(quat, acc, gyro)
 
-    def on_pose(self, p):
-        """ Sends pose data on to any registered handler function. """
-        for h in self.pose_handlers:
-            h(p)
+    def on_gesture(self, gesture_input_data):
+        """ Parses gesture classification data and sends to appropriate
+        handler functions. """
+        typ, val, xdir = classifier_event(gesture_input_data)
 
-    def on_arm(self, arm, xdir):
-        """ Sends arm recognition data on to any registered handler function. """
-        for h in self.arm_handlers:
-            h(arm, xdir)
+        # On arm state.
+        if typ == Classifier_Event_Type.arm_synced.value:
+            for h in self.arm_handlers:
+                h(Arm(val), X_Direction(xdir))
 
-    def on_battery(self, battery_level):
+        # Removed from arm state
+        elif typ == Classifier_Event_Type.arm_unsynced.value:
+            for h in self.arm_handlers:
+                h(Arm.unknown, X_Direction.unknown)
+
+        # Pose states
+        elif typ == Classifier_Event_Type.pose.value:
+            for h in self.pose_handlers:
+                h(Pose(val))
+
+    def on_battery(self, battery_level_data):
         """ Sends battery level on to any registered handler function. """
+        level = ord(battery_level_data)
         for h in self.battery_handlers:
-            h(battery_level)
+            h(level)

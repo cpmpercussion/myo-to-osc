@@ -6,14 +6,27 @@
 #
 
 import struct
+import binascii
 import threading
-import time
 import serial
 
 BLE_RESPONSE_PKT = 0x00
 BLE_EVENT_PKT = 0x80
 WIFI_RESPONSE_PKT = 0x08
 WIFI_EVENT_PKT = 0x88
+
+
+def mac_ints_to_string(mac_ints):
+    """Returns a string from a MAC address given as a list of ints."""
+    return ":".join([binascii.hexlify(bytes([n])).decode('utf-8') for n in mac_ints[::-1]])
+
+
+def mac_string_to_ints(mac_string):
+    """Returns a list of ints from standard mac address notation"""
+    split_addr = mac_string.split(':')[::-1]  # split by :, then reverse byte order
+    addr_bytes = [binascii.unhexlify(n) for n in split_addr]  # change to bytes
+    addr_ints = [struct.unpack("B", n)[0] for n in addr_bytes]  # change to ints
+    return addr_ints
 
 
 class Packet(object):
@@ -92,18 +105,19 @@ class BT(object):
         self.remove_handler(h)
         return res[0]
 
-    # specific BLE commands
-    def connect(self, addr):
-        return self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
+    def connect(self, address):
+        """ Connect to a BLE device. Specify by MAC address in 'xx:xx:xx:xx:xx:xx' format. """
+        addr = mac_string_to_ints(address)
+        return self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))  # Todo, figure out this command
 
     def get_connections(self):
-        return self.send_command(0, 6)
+        return self.send_command(0, 6)  # Todo, figure out this command
 
     def discover(self):
-        return self.send_command(6, 2, b'\x01')
+        return self.send_command(6, 2, b'\x01')  # Todo, figure out this command
 
     def end_scan(self):
-        return self.send_command(6, 4)
+        return self.send_command(6, 4)  # Todo, figure out this command
 
     def disconnect(self, h):
         return self.send_command(3, 0, struct.pack('<B', h))

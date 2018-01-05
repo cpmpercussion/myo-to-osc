@@ -8,10 +8,33 @@
 
 import re
 import struct
-import binascii
 from serial.tools.list_ports import comports
-from .bluetooth import BT
+from .bluetooth import *
 from .myohw import *
+import time
+
+
+def discover_myos(adapter):
+    print('Scanning for Myos...')
+    adapter.discover()
+    myo_details = {}
+    myo_addresses = []
+    t = time.time()
+    while time.time() - t < 1.0:  # todo, put a timeout here.
+        p = adapter.recv_packet()
+        name = p.payload[8:]
+        name = name[5:].split(b'\x00')[0]
+        mac_address = list(list(p.payload[2:8]))
+        uuid = p.payload[-16:]
+        mac_address_string = mac_ints_to_string(mac_address)
+        if uuid == MyoServiceInfoUuid:  # This is MYO_SERVICE_INFO_UUID # found a myo.
+            name = name.decode('utf-8')
+            myo_details[name] = mac_address_string
+            myo_addresses.append(mac_address)
+            if name in myo_details.keys():
+                print("Found a Myo:", name, "MAC:", mac_address_string)  # print the Myo's mac address
+    adapter.end_scan()
+    return myo_details
 
 
 class Myo(object):
@@ -19,18 +42,23 @@ class Myo(object):
     sending to handler functions, and sending configuration.'''
 
     def __init__(self, tty=None):
-        if tty is None:
-            tty = self.detect_tty()
-        if tty is None:
-            raise ValueError('Myo dongle not found!')
-
-        self.bt = BT(tty, baudrate=115200)
         self.conn = None
         self.emg_handlers = []
         self.imu_handlers = []
         self.arm_handlers = []
         self.pose_handlers = []
         self.battery_handlers = []
+        self.name = None
+        self.firmware = None
+
+        # Setup Bluetooth Connection
+        # TODO: put this elsewhere.
+        if tty is None:
+            tty = self.detect_tty()
+        if tty is None:
+            raise ValueError('Myo dongle not found!')
+        self.bt = BT(tty, baudrate=115200)
+
 
     def detect_tty(self):
         for p in comports():
@@ -43,27 +71,6 @@ class Myo(object):
         """ Receive BLE packets """
         self.bt.recv_packet()
 
-    def scan_myo(self):
-        print('Scanning for a Myo...')
-        self.bt.discover()
-        addr = None
-        while addr is None:
-            p = self.bt.recv_packet()
-            if p.payload.endswith(MyoServiceInfoUuid):  # This is MYO_SERVICE_INFO_UUID
-                addr = list(list(p.payload[2:8]))
-                mac_address_string = "%x:%x:%x:%x:%x:%x" % struct.unpack("BBBBBB", bytes(addr[::-1]))
-                print("Found a Myo:", mac_address_string)  # print the Myo's mac address
-                break
-        self.bt.end_scan()
-        return addr
-
-    def mac_string_to_ints(self, mac_string):
-        """Returns a list of ints from standard mac address notation"""
-        split_addr = mac_string.split(':')[::-1]  # split by :, then reverse byte order
-        addr_bytes = [binascii.unhexlify(n) for n in split_addr]  # change to bytes
-        addr_ints = [struct.unpack("B", n)[0] for n in addr_bytes]  # change to ints
-        return addr_ints
-
     def connect(self, address=None):
         """ Connects to a Myo specified by MAC address, or scans for a Myo if no address is given. """
         # stop scanning and disconnect bluetooth as needed.
@@ -72,23 +79,26 @@ class Myo(object):
         self.bt.disconnect(1)
         self.bt.disconnect(2)
 
-        # Calculate address or scan for Myo if necessary.
+        # scan for Myo if necessary.
         if address is None:
-            addr = self.scan_myo()
-        else:
-            addr = self.mac_string_to_ints(address)
-            print("Connecting to Myo:", address)
-            print("Byte Address:", addr)
+            myo_details = discover_myos(self.bt)
+            address = list(myo_details.values())[0]  # Could fail if no Myo is found.
+
+        # Calculate address
+        print("Connecting to Myo:", address)
 
         # connect and wait for status event
-        conn_pkt = self.bt.connect(addr)
+        conn_pkt = self.bt.connect(address)
         self.conn = list(conn_pkt.payload)[-1]
-        self.bt.wait_event(3, 0)
+        self.bt.wait_event(3, 0)  # TODO: figure out this line.
         # Print out some Myo details.
-        print('name:', self.get_name())
-        print('firmware: %d.%d.%d.%d' % self.get_firmware())
+        self.name = self.get_name()
+        self.firmware = self.get_firmware()
+        print('Myo Connected.')
+        print('name:', self.name)
+        print('firmware: %d.%d.%d.%d' % self.firmware)
 
-        # Subscribe to services etc.
+        # Subscribe to services
         self.write_attr(MyoChars.IMUDataDescriptor.value, b'\x01\x00')  # enable IMU data
         self.write_attr(MyoChars.ArmDescriptor.value, b'\x02\x00')  # enable on/off arm notifications
         self.write_attr(MyoChars.EmgData0Descriptor.value, b'\x01\x00')  # Suscribe to EmgData0Characteristic
@@ -105,7 +115,7 @@ class Myo(object):
         if (p.cls, p.cmd) != (4, 5):
             return
         c, attr, typ = struct.unpack('<BHB', p.payload[:4])
-        pay = p.payload[5:] # chop off the first five bytes of the payload.
+        pay = p.payload[5:] # chop off the first five bytes of the payload for some reason.
         # Read notification handles corresponding to the for EMG characteristics
         if attr in MYO_EMG_CHARACTERISTICS:
             emg1, emg2 = emg_data(pay)

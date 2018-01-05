@@ -63,7 +63,6 @@ m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)
 m.add_battery_handler(proc_battery)
 m.connect()  # connects to first Myo seen.
-
 # Setup Myo mode, buzzes when ready.
 m.sleep_mode(Sleep_Mode.never_sleep.value)
 # EMG and IMU are enabled, classifier is disabled (thus, no sync gestures required, less annoying buzzing).

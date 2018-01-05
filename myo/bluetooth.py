@@ -5,6 +5,8 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
+import re
+from serial.tools.list_ports import comports
 import struct
 import binascii
 import threading
@@ -14,6 +16,15 @@ BLE_RESPONSE_PKT = 0x00
 BLE_EVENT_PKT = 0x80
 WIFI_RESPONSE_PKT = 0x08
 WIFI_EVENT_PKT = 0x88
+
+
+def detect_myo_tty():
+    """ Attempts to detect a Myo Bluetooth adapter among the system's serial ports. """
+    for p in comports():
+        if re.search(r'PID=2458:0*1', p[2]):
+            print('available BT adapter:', p[0])
+            return p[0]
+    return None
 
 
 def mac_ints_to_string(mac_ints):
@@ -44,11 +55,19 @@ class Packet(object):
 
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
-    def __init__(self, tty, baudrate=115200):
-        self.ser = serial.Serial(port=tty, baudrate=baudrate, dsrdtr=1)
+    def __init__(self, tty=None, baudrate=115200):
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
+        # Setup Bluetooth Connection
+        # TODO: put this elsewhere.
+        # Detect available TTY Bluetooth dongle if not specified.
+        if tty is None:
+            tty = detect_myo_tty()
+        if tty is None:
+            raise ValueError('Myo dongle not found!')
+        # Connect to the Bluetooth dongle via serial connection.
+        self.ser = serial.Serial(port=tty, baudrate=baudrate, dsrdtr=1)
 
     def recv_packet(self, timeout=None):
         self.ser.timeout = None

@@ -6,19 +6,18 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
-import re
 import struct
-from serial.tools.list_ports import comports
 from .bluetooth import *
 from .myohw import *
 import time
 
 
 def discover_myos(adapter):
+    """ Scans the Bluetooth adapter for available Myos. 
+    Prints out their names and MAC addresses. """
     print('Scanning for Myos...')
     adapter.discover()
     myo_details = {}
-    myo_addresses = []
     t = time.time()
     while time.time() - t < 1.0:  # todo, put a timeout here.
         p = adapter.recv_packet()
@@ -29,10 +28,9 @@ def discover_myos(adapter):
         mac_address_string = mac_ints_to_string(mac_address)
         if uuid == MyoServiceInfoUuid:  # This is MYO_SERVICE_INFO_UUID # found a myo.
             name = name.decode('utf-8')
-            myo_details[name] = mac_address_string
-            myo_addresses.append(mac_address)
-            if name in myo_details.keys():
+            if name not in myo_details.keys():
                 print("Found a Myo:", name, "MAC:", mac_address_string)  # print the Myo's mac address
+            myo_details[name] = mac_address_string
     adapter.end_scan()
     return myo_details
 
@@ -50,22 +48,8 @@ class Myo(object):
         self.battery_handlers = []
         self.name = None
         self.firmware = None
-
-        # Setup Bluetooth Connection
-        # TODO: put this elsewhere.
-        if tty is None:
-            tty = self.detect_tty()
-        if tty is None:
-            raise ValueError('Myo dongle not found!')
         self.bt = BT(tty, baudrate=115200)
 
-
-    def detect_tty(self):
-        for p in comports():
-            if re.search(r'PID=2458:0*1', p[2]):
-                print('using device:', p[0])
-                return p[0]
-        return None
 
     def run(self):
         """ Receive BLE packets """

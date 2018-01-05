@@ -81,7 +81,7 @@ except KeyboardInterrupt:
     pass
 finally:
     m.disconnect()
-    print("Disconnected")
+    print("\nDisconnected")
 
 
 # TODO:

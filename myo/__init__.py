@@ -87,7 +87,6 @@ class Myo(object):
 
         # connect and wait for status event
         conn_pkt = self.bt.connect(address)
-        print(conn_pkt)
         self.conn = list(conn_pkt.payload)[-1]
         self.bt.wait_event(3, 0)  # TODO: figure out this line.
         # Print out some Myo details.

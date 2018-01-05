@@ -36,17 +36,13 @@ def toEulerAngle(w, x, y, z):
 
 
 def proc_imu(quat, acc, gyro):
-    proc_quat = tuple(map(lambda x: x / ORIENTATION_SCALE, quat))
-    proc_acc = tuple(map(lambda x: x / ACCELEROMETER_SCALE, acc))
-    proc_gyro = tuple(map(lambda x: x / GYROSCOPE_SCALE, gyro))
-    # print("quat:", proc_quat, "acc:", proc_acc, "gyro:", proc_gyro, end='\r')
-    osc_client.send_message("/ori", proc_quat)
-    osc_client.send_message("/acc", proc_acc)
-    osc_client.send_message("/gyr", proc_gyro)
-    roll, pitch, yaw = toEulerAngle(proc_quat[0], proc_quat[1], proc_quat[2], proc_quat[3])
+    osc_client.send_message("/ori", quat)
+    osc_client.send_message("/acc", acc)
+    osc_client.send_message("/gyr", gyro)
+    roll, pitch, yaw = toEulerAngle(quat[0], quat[1], quat[2], quat[3])
     osc_client.send_message("/euler", (roll / math.pi, pitch / math.pi, yaw / math.pi))  # vals sent in [-1,1] (not [-pi,pi])
-    osc_client.send_message("/accmag", vector_3d_magnitude(proc_acc[0], proc_acc[1], proc_acc[2]))  # magnitude of accelerometer vector
-    osc_client.send_message("/gyrmag", vector_3d_magnitude(proc_gyro[0], proc_gyro[1], proc_gyro[2]))  # magnitude of gyroscope vector
+    osc_client.send_message("/accmag", vector_3d_magnitude(acc[0], acc[1], acc[2]))  # magnitude of accelerometer vector
+    osc_client.send_message("/gyrmag", vector_3d_magnitude(gyro[0], gyro[1], gyro[2]))  # magnitude of gyroscope vector
 
 
 def proc_emg(emg_data):
@@ -93,4 +89,3 @@ finally:
 #   - direct connection to a specific myo.
 #   - move classification if then to myohw.py
 #   - experiment connecting to multiple myos.
-#   - update to pyGatt rather than lame bluetooth backend.

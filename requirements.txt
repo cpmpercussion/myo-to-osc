@@ -1,2 +1,2 @@
 pyserial
-pythonosc
+python-osc

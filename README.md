@@ -1,14 +1,14 @@
 # Overview
 
-This project provides a bridge between the Thalmic Myo Armband and OSC connected applications such as Pd, SuperCollider, or Max/MSP. The code is pure-Python designed to run in MacOS, Linux, (maybe also Windows) using the Myo bluetooth dongle.
+This project provides a bridge between the Thalmic Myo Armband and OSC connected applications such as Pd, SuperCollider, or Max/MSP. The code is purely Python designed to run in MacOS and Linux using the Myo bluetooth dongle.
 
-Please note that this project *requires* Python 3, and uses the `pyserial` and `pythonosc` modules.
+Please note that this project *requires* Python 3.
 
 # Usage
 
 Install the dependencies:
 
-`pip3 install requirements.txt`
+`pip install -r requirements.txt`
 
 Start the program:
 
@@ -20,17 +20,23 @@ Open `rec_myo.pd` in Pure Data to see an example of reading these OSC messages.
 
 ## Dongle device name
 
-This program requires the Myo's included USB Bluetooth LE dongle which provides a simple serial interface for connecting to the Myo.
+To use the library, you might need to know the name of the device
+corresponding to the Myo dongle. The programs will attempt to detect it
+automatically, but if that doesn't work, here's how to find it out manually:
 
-The `BT` class should be able to find the serial port of the dongle automatically, if it doesn't try unplugging and plugging it back in or specifying the address manually. You can start the Myo class with the adapter's device name as an argument if you want to be sure.
+- Linux: Run the command `ls /dev/ttyACM*`. One of the names it prints (there
+  will probably only be one) is the device. Try them each if there are multiple,
+  or unplug the dongle and see which one disappears if you run the command
+  again. If you get a permissions error, running `sudo usermod -aG dialout
+  $USER` will probably fix it.
 
-### Pose / Arm Classification
+- Windows: Open Device Manager (run `devmgmt.msc`) and look under "Ports (COM &
+  LPT)". Find a device whose name includes "Bluegiga". The name you need is in
+  parentheses at the end of the line (it will be "COM" followed by a number).
 
-This library can use the Myo's onboard pose and arm recognition. You have to turn this feature on using the `set_mode` function of the Myo class. e.g., 
+- MacOS: Same as Linux, replacing `ttyACM` with `tty.usb`.
 
-    m.set_mode(EMG_Mode.send_emg.value, IMU_Mode.send_data.value, Classifier_Mode.enabled.value)
-
-Then perform the sync gesture as described by [Myo Support](https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture):
+### Perform the sync gesture as described by [Myo Support](https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture):
 
 > Make sure you're wearing Myo with the USB port facing your wrist. Gently flex
 > your wrist away from your body. Myo will begin to vibrate when it recognizes
@@ -41,16 +47,6 @@ Then perform the sync gesture as described by [Myo Support](https://support.getm
 > see it blink along with an notification next to the gesture indicator window
 > in Myo Connect. Once Myo is fully warmed up and synced, you will feel three
 > distinct vibrations.
-
-# About the Myo Bluetooth dongle
-
-The Myo Bluetooth dongle provides a simple serial interface to Bluetooth LE devices, thus the code here can be relatively simple and cross-platform. There are Python libraries for native OS-specific Bluetooth LE connections, but I haven't found one that works better or as well as the present solution.
-
-There's a working version of this repo using the [`pyGatt`](https://github.com/peplin/pygatt) library that can also use the dongle on any platform and other Bluetooth adapters under Linux (see the [pygatt-version branch](https://github.com/cpmpercussion/myo-to-osc/tree/pygatt-version)), but I found the performance to be too bad to use.
-
-Another possibility would be to use the [Adafruit Python BluetoothLE library](https://github.com/adafruit/Adafruit_Python_BluefruitLE), which could work under Linux and MacOS but not Windows.
-
-TL;DR: This library requires the Myo Bluetooth dongle for good reasons.
 
 # Acknowledgements
 

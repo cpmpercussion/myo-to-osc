@@ -6,6 +6,7 @@ import datetime
 import math
 import logging
 import argparse
+import sys
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
@@ -87,8 +88,11 @@ m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)
 m.add_battery_handler(proc_battery)
 
-if args.discover:  # Discovers Myos and prints addresses.
-    discover_myos(m.bt)
+if args.discover:  # Discovers Myos and prints addresses, then exits script.
+    results = discover_myos(m.bt)
+    if not results:
+        print("No Myos found.")
+    sys.exit()
 
 m.connect(address=args.address)  # connects to specific Myo unless arg.address is none.
 # Setup Myo mode, buzzes when ready.

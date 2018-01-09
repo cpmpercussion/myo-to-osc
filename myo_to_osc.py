@@ -10,7 +10,9 @@ from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
 parser = argparse.ArgumentParser(description='Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000.')
-parser.add_argument('-l', '--log', dest='logging', action="store_true", help='Save Myo data to a logfile.')
+parser.add_argument('-l', '--log', dest='logging', action="store_true", help='Save Myo data to a log file.')
+parser.add_argument('-d', '--discover', dest='discover', action='store_true', help='Search for available Myos and print their names and MAC addresses.')
+parser.add_argument('-a', '--address', dest='address', help='A Myo MAC address to connect to, in format "XX:XX:XX:XX:XX:XX".')
 
 args = parser.parse_args()
 
@@ -69,6 +71,10 @@ def proc_battery(battery_level):
     # print("Battery", battery_level, end='\r')
     osc_client.send_message("/battery", battery_level)
 
+if args.address is not None:
+    print("Attempting to connect to Myo:", args.address)
+else:
+    print("No Myo address provided.")
 
 if args.logging:
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
@@ -80,7 +86,11 @@ m = Myo()  # scan for USB bluetooth adapter and start the serial connection auto
 m.add_emg_handler(proc_emg)
 m.add_imu_handler(proc_imu)
 m.add_battery_handler(proc_battery)
-m.connect()  # connects to first Myo seen.
+
+if args.discover:  # Discovers Myos and prints addresses.
+    discover_myos(m.bt)
+
+m.connect(address=args.address)  # connects to specific Myo unless arg.address is none.
 # Setup Myo mode, buzzes when ready.
 m.sleep_mode(Sleep_Mode.never_sleep.value)
 # EMG and IMU are enabled, classifier is disabled (thus, no sync gestures required, less annoying buzzing).
@@ -103,6 +113,5 @@ finally:
 
 
 # TODO:
-#   - direct connection to a specific myo.
 #   - move classification if then to myohw.py
 #   - experiment connecting to multiple myos.

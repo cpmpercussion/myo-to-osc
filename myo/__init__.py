@@ -15,7 +15,7 @@ import time
 def discover_myos(adapter):
     """ Scans the Bluetooth adapter for available Myos. 
     Prints out their names and MAC addresses. """
-    print('Scanning for Myos...')
+    print('Discovering available Myos...')
     adapter.discover()
     myo_details = {}
     t = time.time()
@@ -80,7 +80,12 @@ class Myo(object):
         # scan for Myo if necessary.
         if address is None:
             myo_details = discover_myos(self.bt)
-            address = list(myo_details.values())[0]  # Could fail if no Myo is found.
+            try:
+                address = list(myo_details.values())[0]  # Could fail if no Myo is found.
+            except IndexError:
+                print("No Myos found to connect to.")
+                print("Not connected.")
+                return
 
         # Calculate address
         print("Connecting to Myo:", address)

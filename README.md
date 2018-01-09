@@ -20,6 +20,22 @@ Open `rec_myo.pd` in Pure Data to see an example of reading these OSC messages.
 
 To quit, type Control-C in the Python session.
 
+Other optional arguments such as specific connections and loggin are available, try `python3 myo_to_osc.py -h` for all options:
+
+    usage: myo_to_osc.py [-h] [-l] [-d] [-a ADDRESS]
+
+    Connects to a Myo, then sends EMG and IMU data as OSC messages to
+    localhost:3000.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -l, --log             Save Myo data to a log file.
+      -d, --discover        Search for available Myos and print their names and
+                            MAC addresses.
+      -a ADDRESS, --address ADDRESS
+                            A Myo MAC address to connect to, in format
+                            "XX:XX:XX:XX:XX:XX".
+
 ## Dongle device name
 
 This program requires the Myo's included USB Bluetooth LE dongle which provides a simple serial interface for connecting to the Myo.

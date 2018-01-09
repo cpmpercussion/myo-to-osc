@@ -5,11 +5,17 @@ from myo import *
 import datetime
 import math
 import logging
+import argparse
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
-LOGGING = True  # If true, the script logs to a file.
+parser = argparse.ArgumentParser(description='Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000.')
+parser.add_argument('-l', '--log', dest='logging', action="store_true", help='Save Myo data to a logfile.')
+
+args = parser.parse_args()
+
 LOG_FILE = datetime.datetime.now().isoformat().replace(":", "-")[:19] + "-myo-to-osc.log"  # Log file name.
+LOG_FORMAT = '%(message)s'
 
 osc_client = udp_client.SimpleUDPClient("localhost", 3000)  # OSC Client for sending messages.
 
@@ -47,16 +53,16 @@ def proc_imu(quat, acc, gyro):
     osc_client.send_message("/euler", (roll / math.pi, pitch / math.pi, yaw / math.pi))  # vals sent in [-1,1] (not [-pi,pi])
     osc_client.send_message("/accmag", vector_3d_magnitude(acc[0], acc[1], acc[2]))  # magnitude of accelerometer vector
     osc_client.send_message("/gyrmag", vector_3d_magnitude(gyro[0], gyro[1], gyro[2]))  # magnitude of gyroscope vector
-    if LOGGING:
-        logging.info("{0}, imu, {1[0]}, {1[1]}, {1[2]}, {1[3]}, {2[0]}, {2[1]}, {2[2]}, {3[0]}, {3[1]}, {3[2]}".format(datetime.datetime.now().isoformat(), quat, acc, gyro))  # 1 + 4 + 3 + 3 = 11 args.
+    if args.logging:
+        logging.info("{3}, imu, {0[0]}, {0[1]}, {0[2]}, {0[3]}, {1[0]}, {1[1]}, {1[2]}, {2[0]}, {2[1]}, {2[2]}".format(quat, acc, gyro, datetime.datetime.now().isoformat()))  # 1 + 4 + 3 + 3 = 11 args.
 
 
 def proc_emg(emg_data):
     proc_emg = tuple(map(lambda x: x / 127.0, emg_data))  # scale EMG to be in [-1, 1]
     # print("emg:", em_data, end='\r')
     osc_client.send_message("/emg", proc_emg)
-    if LOGGING:
-        logging.info("{0}, emg, {1[0]}, {1[1]}, {1[2]}, {1[3]}, {1[4]}, {1[5]}, {1[6]}, {1[7]}".format(datetime.datetime.now().isoformat(), emg_data))
+    if args.logging:
+        logging.info("{1}, emg, {0[0]}, {0[1]}, {0[2]}, {0[3]}, {0[4]}, {0[5]}, {0[6]}, {0[7]}".format(emg_data, datetime.datetime.now().isoformat()))
 
 
 def proc_battery(battery_level):
@@ -64,8 +70,9 @@ def proc_battery(battery_level):
     osc_client.send_message("/battery", battery_level)
 
 
-if LOGGING:
-    logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
+if args.logging:
+    logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
+    print("Logging enabled:", LOG_FILE)
 # Setup Myo Connection
 m = Myo()  # scan for USB bluetooth adapter and start the serial connection automatically
 # m = Myo(tty="/dev/tty.usbmodem1")  # MacOS

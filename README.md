@@ -70,6 +70,21 @@ Another possibility would be to use the [Adafruit Python BluetoothLE library](ht
 
 TL;DR: This library requires the Myo Bluetooth dongle for good reasons.
 
+# Citation
+
+If this project is useful for you in academic work, it would be wonderful if you could cite the paper where it is introduced:
+
+> Charles P. Martin, Alexander Refsum Jensenius, and Jim Torresen. Composing an Ensemble Standstill Work for Myo and Bela. In Proceedings of the International Conference on New Interfaces for Musical Expression, NIME '18, June 2018.
+
+    @inproceedings{Martin:2018ab,
+        title = {Composing an Ensemble Standstill Work for Myo and Bela},
+        author = {Charles P. Martin and Alexander Refsum Jensenius and Jim Torresen},
+        booktitle = {Proceedings of the International Conference on New Interfaces for Musical Expression},
+        year = {2018},
+        series = {NIME '18},
+        url = {http://folk.uio.no/charlepm/preprints/2018-ComposingEnsembleStandstillWork.pdf},
+        }
+
 # Acknowledgements
 
 Thanks to the original authors of the `myo_raw` library, and later contributions that served as a starting point for this project: Danny Zhu, Alvaro Villoslada, Fernando Cosentino.

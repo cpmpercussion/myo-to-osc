@@ -82,8 +82,8 @@ If this project is useful for you in academic work, it would be wonderful if you
         booktitle = {Proceedings of the International Conference on New Interfaces for Musical Expression},
         year = {2018},
         series = {NIME '18},
-        url = {http://folk.uio.no/charlepm/preprints/2018-ComposingEnsembleStandstillWork.pdf},
-        }
+        url = {http://folk.uio.no/charlepm/preprints/2018-ComposingEnsembleStandstillWork.pdf}
+    }
 
 # Acknowledgements
 

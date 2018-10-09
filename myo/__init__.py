@@ -9,6 +9,7 @@
 import struct
 from .bluetooth import *
 from .myohw import *
+from .utils import *
 import time
 
 

@@ -37,7 +37,7 @@ def discover_myos(adapter):
 
 
 class Myo(object):
-    '''Manages a connection with a Myo dongle, handles receiving messages,
+    '''Manages a y y connection with a Myo dongle, handles receiving messages,
     sending to handler functions, and sending configuration.'''
 
     def __init__(self, adapter=None, tty=None):
@@ -72,12 +72,6 @@ class Myo(object):
 
         If no address is given, scans and connects to first responding Myo.
         """
-        # stop scanning and disconnect bluetooth as needed.
-        self.bt.end_scan()
-        self.bt.disconnect(0)
-        self.bt.disconnect(1)
-        self.bt.disconnect(2)
-
         # scan for Myo if necessary.
         if address is None:
             myo_details = discover_myos(self.bt)
@@ -119,7 +113,12 @@ class Myo(object):
         if (p.cls, p.cmd) != (4, 5):
             return
         c, attr, typ = struct.unpack('<BHB', p.payload[:4])
+        #print(p)
+        pay_start = p.payload[:5]
+        #print("Pay start:", ' '.join('%02X' % b for b in list(pay_start)))
         pay = p.payload[5:] # chop off the first five bytes of the payload for some reason.
+        #print("c", c, "attr", attr, "typ", typ) # testing.
+        #print("Pay end:", ' '.join('%02X' % b for b in list(pay)))
         # Read notification handles corresponding to the for EMG characteristics
         if attr in MYO_EMG_CHARACTERISTICS:
             self.on_emg(pay)

@@ -9,6 +9,8 @@ import argparse
 import sys
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
+import serial
+
 
 parser = argparse.ArgumentParser(description='Connects to a Myo, then sends EMG and IMU data as OSC messages to localhost:3000.')
 parser.add_argument('-l', '--log', dest='logging', action="store_true", help='Save Myo data to a log file.')
@@ -62,10 +64,17 @@ def return_numbered_emg_processor(number=0):
 
 
 # start the bluetooth connection
-adapter = BT(tty="/dev/tty.usbmodem11", baudrate=115200)
+#serial_connection = serial.Serial(port="/dev/tty.usbmodem11", baudrate=115200, dsrdtr=1) # just one of these
 
-m1 = Myo(adapter=adapter)
-m2 = Myo(adapter=adapter)
+# two bluetooth connections
+#adapter = BT()
+
+adapter1 = BT(tty="/dev/tty.usbmodem11", baudrate=115200)
+adapter2 = BT(tty="/dev/tty....", baudrate=115200)
+
+
+m1 = Myo(adapter=adapter1)
+m2 = Myo(adapter=adapter2)
 
 
 # Setup Myo Connection

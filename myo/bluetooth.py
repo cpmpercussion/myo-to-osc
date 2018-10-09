@@ -55,7 +55,7 @@ class Packet(object):
 
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
-    def __init__(self, tty=None, baudrate=115200):
+    def __init__(self, tty=None, baudrate=115200, serial_conn=None):
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
@@ -67,7 +67,10 @@ class BT(object):
         if tty is None:
             raise ValueError('Myo dongle not found!')
         # Connect to the Bluetooth dongle via serial connection.
-        self.ser = serial.Serial(port=tty, baudrate=baudrate, dsrdtr=1)
+        if serial_conn is None:
+            self.ser = serial.Serial(port=tty, baudrate=baudrate, dsrdtr=1)
+        else:
+            self.ser = serial
 
     def recv_packet(self, timeout=None):
         self.ser.timeout = None
@@ -157,6 +160,7 @@ class BT(object):
             p = self.recv_packet()
             # no timeout, so p won't be None
             if p.typ == 0:
+                #print(p) # print responses for debugging.
                 return p
             # not a response: must be an event
             self.handle_event(p)
